@@ -1,0 +1,36 @@
+@startuml
+!include <C4/C4_Context>
+
+title jenkins-pipeline-helper - Level 1 Logical View
+
+Person(dev, "DevOps Engineer", "Configures CI/CD pipelines")
+
+Boundary(projects, "Projects") {
+    System(proj1, "Project 1", "Application")
+    System(proj2, "Project 2", "Application")
+    System(projN, "Project N", "Application")
+}
+
+
+System(lib, "jenkins-pipeline-helper", "Shared Library")
+
+System_Ext(jenkins, "Jenkins", "Pipeline Runner")
+System_Ext(docker, "Docker", "Container Runtime")
+System_Ext(nginx, "Nginx", "Reverse Proxy")
+System_Ext(mongodb, "MongoDB", "Database")
+System_Ext(github, "GitHub", "Code Repository")
+System_Ext(ollama, "Ollama API", "AI Code Review")
+
+Rel(dev, proj1, "configura", "app-config.yaml")
+Rel(proj1, lib, "imports via", "@Library(...)")
+Rel(proj2, lib, "imports via", "@Library(...)")
+Rel(projN, lib, "imports via", "@Library(...)")
+
+Rel(lib, jenkins, "runs on")
+Rel(lib, docker, "manages containers")
+Rel(lib, nginx, "configures proxy")
+Rel(lib, mongodb, "backs up database")
+Rel(lib, github, "posts PR comments")
+Rel(lib, ollama, "requests AI review")
+
+@enduml

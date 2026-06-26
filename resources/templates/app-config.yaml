@@ -1,0 +1,39 @@
+project:
+  name: my-app
+  type: fullstack
+  netName: my-app-net
+  environment: development
+
+services:
+  api:
+    type: api
+    image: node:18
+    port: 3000
+    buildCommand: |
+      npm install
+      npm run build
+    env:
+      NODE_ENV: production
+      PORT: 3000
+    healthCheck:
+      path: /health
+      timeout: 60
+      interval: 5
+    replicas: 1
+  
+  mongodb:
+    type: mongo
+    image: mongo:7-jammy
+    port: 27017
+    dataVolume: true
+    env:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_DATABASE: myapp
+  
+  redis:
+    type: redis
+    image: redis:alpine
+    port: 6379
+    env:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
