@@ -11,7 +11,6 @@ import com.citeve.devops.core.adapters.docker.DockerContainerAdapter
 import com.citeve.devops.core.adapters.docker.DockerNetworkAdapter
 import com.citeve.devops.core.adapters.nginx.NginxProxyAdapter
 import com.citeve.devops.core.adapters.backup.MongoBackupAdapter
-import com.citeve.devops.core.adapters.backup.NoOpBackupAdapter
 
 def loadConfiguration(Map params) {
     if (params.file) return readYaml(file: params.file)
@@ -94,7 +93,8 @@ def detectBackupAdapter(Map config) {
     def databaseService = config.services.find { name, svc ->
         svc.type in ['mongo', 'mongodb']
     }
-    return databaseService ? new MongoBackupAdapter() : new NoOpBackupAdapter()
+    
+    return databaseService ? new MongoBackupAdapter() : null
 }
 
 def cleanupOrphaned(Project project) {
@@ -316,13 +316,12 @@ def call(Map params = [:]) {
                     allOf {
                         expression { env.IS_SCHEDULED.isTrue() }
                         expression { env.BRANCH_NAME in ['main', 'master'] }
+                        expression { backupAdapter != null } 
                     }
                 }
                 steps {
                     script {
-                        if (backupAdapter.isBackupSupported()) {
-                            backupAdapter.createBackup(project, Configuration.PATHS.backupDir)
-                        }
+                        backupAdapter.createBackup(project, Configuration.PATHS.backupDir)
                     }
                 }
             }
