@@ -1,0 +1,37 @@
+type: object
+required:
+  - project_name
+  - services
+properties:
+  project_name:
+    type: string
+  services:
+    type: object
+    additionalProperties:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+        image:
+          type: string
+        port:
+          type: integer
+        build_command:
+          type: string
+        health_check:
+          type: object
+          properties:
+            path:
+              type: string
+            status_code:
+              type: integer
+        env:
+          type: object
+        depends_on:
+          type: array
+        data_volume:
+          type: boolean
+        volumes:
+          type: array
