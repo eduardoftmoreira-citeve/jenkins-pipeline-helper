@@ -1,0 +1,44 @@
+services:
+  jenkins:
+    build:
+      context: .
+      dockerfile: Dockerfile.jenkins
+    container_name: jenkins-server
+    user: 0:0
+    restart: unless-stopped
+    ports:
+      - "9999:8080" #UI port
+      - "50000:50000" #build agents connection port
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/users/cgomes/nginx/locations:/home/users/cgomes/nginx/locations
+      - /home/emoreira/cicd-poc/backups:/home/emoreira/cicd-poc/backups/ 
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=true
+      - JENKINS_OPTS="--prefix=/jenkins" #added for nginx configuration
+      - TZ=Europe/Lisbon
+    networks:
+      - common_network
+    depends_on:
+      - registry
+  
+  registry:
+    image: registry:2
+    container_name: docker-agent-registry
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - registry_data:/var/lib/registry
+    networks:
+      - common_network
+
+volumes:
+  jenkins_home:
+  registry_data:
+
+networks:
+  common_network: 
+    external: true
+    name: common_network
