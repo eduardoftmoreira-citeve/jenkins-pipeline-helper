@@ -1,6 +1,17 @@
 import os
 
 class Configuration:
+    _BRANCH_ALIASES = {
+        'development': ['develop', 'dev', 'development'],
+        'staging': ['staging', 'stage'],
+        'production': ['main', 'master', 'prod', 'production']
+    }
+
+    _AUTHORIZED_BRANCHES = {
+        'static': ['main', 'master', 'develop', 'staging'],
+        'prefixes': ['feature/', 'hotfix/', 'bugfix/']
+    }
+    
     _PATHS = {
         'backup_dir': '/home/emoreira/cicd-poc/backups',
         'nginx_locations': '/home/users/cgomes/nginx/locations'
@@ -34,6 +45,22 @@ class Configuration:
         'pilot': 'piloto-cicd'
     }
     
+    @staticmethod
+    def get_branch_aliases():
+        return Configuration._BRANCH_ALIASES
+
+    @staticmethod
+    def get_authorized_branches():
+        return Configuration._AUTHORIZED_BRANCHES
+
+    @staticmethod
+    def get_static_branches():
+        return Configuration._AUTHORIZED_BRANCHES['static']
+
+    @staticmethod
+    def get_prefix_branches():
+        return Configuration._AUTHORIZED_BRANCHES['prefixes']
+
     @staticmethod
     def get_backup_dir():
         return Configuration._PATHS['backup_dir']
