@@ -56,6 +56,24 @@ class Configuration:
     _TAGS = {
         'pilot': 'piloto-cicd'
     }
+
+    _OLLAMA = {
+        'url': 'http://192.168.54.202:11434/api/generate',
+        'model': 'qwen2.5-coder:7b',
+        'timeout': 120
+    }
+    
+    @staticmethod
+    def get_ollama_url():
+        return Configuration._OLLAMA['url']
+    
+    @staticmethod
+    def get_ollama_model():
+        return Configuration._OLLAMA['model']
+    
+    @staticmethod
+    def get_ollama_timeout():
+        return Configuration._OLLAMA['timeout']
     
     @staticmethod
     def get_branch_aliases():
