@@ -7,40 +7,43 @@ import com.citeve.devops.core.config.Configuration
 
 class NginxProxyAdapter implements ProxyPort {
     
-    void deployConfig(Project project, String branch, Configuration config) {
-        def confName = "${config.tags.pilot}-${project.name}-${branch}.conf"
-        def configContent = buildNginxConfig(project, branch, config)
+    // ✅ Matches interface: 2 parameters
+    void deployConfig(Project project, String branch) {
+        def confName = "${Configuration.TAGS.pilot}-${project.name}-${branch}.conf"
+        def configContent = buildNginxConfig(project, branch)
         
         writeFile file: confName, text: configContent
         
         sh """
-            mv ${confName} ${config.paths.nginxLocations}/
-            if docker exec ${config.containers.nginx} nginx -t 2>/dev/null; then
-                docker exec ${config.containers.nginx} nginx -s reload
+            mv ${confName} ${Configuration.PATHS.nginxLocations}/
+            if docker exec ${Configuration.CONTAINERS.nginx} nginx -t 2>/dev/null; then
+                docker exec ${Configuration.CONTAINERS.nginx} nginx -s reload
             else
-                rm ${config.paths.nginxLocations}/${confName}
+                rm ${Configuration.PATHS.nginxLocations}/${confName}
                 exit 1
             fi
         """
     }
     
-    void removeConfig(Project project, String branch, Configuration config) {
-        def confName = "${config.tags.pilot}-${project.name}-${branch}.conf"
+    // ✅ Matches interface: 2 parameters
+    void removeConfig(Project project, String branch) {
+        def confName = "${Configuration.TAGS.pilot}-${project.name}-${branch}.conf"
         sh """
-            rm -f ${config.paths.nginxLocations}/${confName}
-            docker exec ${config.containers.nginx} nginx -s reload 2>/dev/null || true
+            rm -f ${Configuration.PATHS.nginxLocations}/${confName}
+            docker exec ${Configuration.CONTAINERS.nginx} nginx -s reload 2>/dev/null || true
         """
     }
     
-    void reloadProxy(Configuration config) {
-        sh "docker exec ${config.containers.nginx} nginx -s reload 2>/dev/null || true"
+    // ✅ Matches interface: 0 parameters
+    void reloadProxy() {
+        sh "docker exec ${Configuration.CONTAINERS.nginx} nginx -s reload 2>/dev/null || true"
     }
     
-    private String buildNginxConfig(Project project, String branch, Configuration config) {
+    private String buildNginxConfig(Project project, String branch) {
         def apiComponent = project.findComponent('api')
-        def port = apiComponent?.port ?: config.ports.apiInternal
+        def port = apiComponent?.port ?: Configuration.PORTS.apiInternal
         def containerName = "${project.name}-api-${branch}"
-        def basePath = "/${config.tags.pilot}/${project.name}/${branch}"
+        def basePath = "/${Configuration.TAGS.pilot}/${project.name}/${branch}"
         
         return """
             location ^~ ${basePath}/ {
