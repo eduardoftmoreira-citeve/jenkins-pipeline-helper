@@ -7,7 +7,7 @@ import com.citeve.devops.core.config.Configuration
 
 class MongoBackupAdapter implements BackupPort {
     
-    void createBackup(Project project, String backupDir, Configuration config) {
+    void createBackup(Project project, String backupDir) {
         def mongoComponent = project.findComponent('mongo')
         if (!mongoComponent) return
         
