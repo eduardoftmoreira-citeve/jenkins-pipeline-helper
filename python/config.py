@@ -30,9 +30,21 @@ class Configuration:
     _HEALTH_CHECK = {
         'timeout': 60,
         'interval': 5,
-        'expected_status': 200
+        'expected_status': 200,
     }
     
+    _HEALTH_CHECKERS = {
+        'api': 'http_health_check',
+        'frontend': 'http_health_check',
+        'mongo': 'mongo_health_check',
+        'redis': 'redis_health_check'
+    }
+
+    _RESCUE_CONFIG = {
+        'max_retries': 3,
+        'wait_time': 10,  # seconds
+    }
+
     _LOGGING = {
         'info': '📣 INFO:',
         'warning': '⚠️ WARNING:',
@@ -120,8 +132,25 @@ class Configuration:
     @staticmethod
     def get_pilot_tag():
         return Configuration._TAGS['pilot']
-        
+
+    @staticmethod
+    def get_health_checker_type(component_type):
+        return Configuration._HEALTH_CHECKERS.get(component_type, 'default')
+
+    @staticmethod
+    def get_health_checker_keys():
+        """Get all registered health checker keys"""
+        return Configuration._HEALTH_CHECKERS.keys()
+
     #retrieve jenkins env variables
     @staticmethod
     def get_env(key, default=None):
         return os.environ.get(key, default)
+
+    @staticmethod
+    def get_max_retries():
+        return Configuration._RESCUE_CONFIG['max_retries']
+    
+    @staticmethod
+    def get_wait_time():
+        return Configuration._RESCUE_CONFIG['wait_time']
