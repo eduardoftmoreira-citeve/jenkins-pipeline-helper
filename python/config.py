@@ -92,7 +92,7 @@ class Configuration:
     
     @staticmethod
     def get_pilot_tag():
-        return Configuration._TAG
+        return Configuration._TAGS['pilot']
         
     #retrieve jenkins env variables
     @staticmethod
