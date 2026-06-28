@@ -1,1 +1,1 @@
-# manter vazio! serve para marcar a diretoria "python" como uma package de python
+# WARNING: keep this empty! its used for tagging the "python" folder as a python package
