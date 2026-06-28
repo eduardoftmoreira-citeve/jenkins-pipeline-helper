@@ -47,10 +47,10 @@ projects.each { projectName, config ->
     }
 }
 
-listView('All Projects') {
+listView('Deployments') {
     description('All project pipelines')
     jobs {
-        regex('/.*')
+        regex('.*')
     }
     columns {
         status()
