@@ -11,6 +11,13 @@ class Configuration:
         'static': ['main', 'master', 'develop', 'staging'],
         'prefixes': ['feature/', 'hotfix/', 'bugfix/']
     }
+
+    _CONFIG_FILES = {
+        'production': 'app-config.prod.yaml',
+        'staging': 'app-config.staging.yaml',
+        'development': 'app-config.dev.yaml',
+        'default': 'app-config.yaml'
+    }
     
     _PATHS = {
         'backup_dir': '/home/emoreira/cicd-poc/backups',
@@ -172,3 +179,13 @@ class Configuration:
     @staticmethod
     def get_wait_time():
         return Configuration._RESCUE_CONFIG['wait_time']
+
+    @staticmethod
+    def get_config_file_for_environment(environment):
+        """Get the config file for a given environment"""
+        return Configuration._CONFIG_FILES.get(environment, Configuration._CONFIG_FILES['default'])
+    
+    @staticmethod
+    def get_config_files():
+        """Get all config file mappings"""
+        return Configuration._CONFIG_FILES.copy()

@@ -1,9 +1,37 @@
+import os
 import re
 import subprocess
 import time
 from config import Configuration
 
-#
+def get_config_file(branch):
+    """Return the appropriate config file for the branch"""
+    environment = detect_environment(branch)
+    config_file = Configuration.get_config_file_for_environment(environment)
+    
+    if environment == 'development' and os.path.exists('app-config.yaml'):
+        return 'app-config.yaml'
+    
+    return config_file
+
+def load_config(branch, config_file_override=None):
+    """Load the appropriate config file for the branch"""
+    import yaml
+    
+    if config_file_override:
+        config_file = config_file_override
+    else:
+        config_file = get_config_file(branch)
+    
+    if not os.path.exists(config_file):
+        print(f"{Configuration.get_log_warning()} Config file {config_file} not found, falling back to app-config.yaml")
+        config_file = 'app-config.yaml'
+        if not os.path.exists(config_file):
+            raise Exception(f"No configuration file found. Tried: {config_file}")
+    
+    with open(config_file, 'r') as f:
+        return yaml.safe_load(f)
+
 def clean_branch(raw_branch):
     branch = raw_branch.split('/')[-1]
     return re.sub(r'[^a-zA-Z0-9-]', '-', branch.replace('/', '-'))

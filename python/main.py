@@ -15,23 +15,27 @@ from utils import (
     detect_environment,
     allocate_port,
     wait_for_health,
-    clean_branch
+    clean_branch,
+    get_config_file,
+    load_config
 )
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', required=True)
     parser.add_argument('--branch', required=True)
-    parser.add_argument('--clean-branch', required=True)
     parser.add_argument('--build-number', required=True)
     parser.add_argument('--change-id', default='')
     parser.add_argument('--change-target', default='')
     parser.add_argument('--workspace', required=True)
     parser.add_argument('--repo-url', required=True)
+    parser.add_argument('--config-file', default=None, help='Override automatic config detection')
     args = parser.parse_args()
     
-    config = json.loads(args.config)
-    branch = args.clean_branch
+    branch = clean_branch(args.branch)
+    environment = detect_environment(branch)
+    
+    config = load_config(branch, args.config_file)
+    
     is_pr = bool(args.change_id)
     is_scheduled = False
     
@@ -41,7 +45,8 @@ def main():
     
     print(f"{Configuration.get_log_info()} Deploying {project.name}")
     print(f"{Configuration.get_log_info()} Branch: {branch}")
-    print(f"{Configuration.get_log_info()} Environment: {detect_environment(branch)}")
+    print(f"{Configuration.get_log_info()} Environment: {environment}")
+    print(f"{Configuration.get_log_info()} Config file: {args.config_file if args.config_file else get_config_file(branch)}")
     print(f"{Configuration.get_log_info()} PR: {is_pr}")
     
     docker = DockerOps()
