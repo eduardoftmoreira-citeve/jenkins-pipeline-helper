@@ -1,19 +1,17 @@
 package com.citeve.devops.core.config
 
-@Singleton(lazy=true)
 class Configuration {
-    
-    final Map paths = [
+    static final Map PATHS = [
         backupDir: "/home/emoreira/cicd-poc/backups",
         nginxLocations: "/home/users/cgomes/nginx/locations"
     ]
     
-    final Map containers = [
+    static final Map CONTAINERS = [
         nginx: "nginx-proxy",
         jenkins: "jenkins-server"
     ]
     
-    final Map ports = [
+    static final Map PORTS = [
         startPort: 10000,
         maxPortRange: 1000,
         apiInternal: 3000,
@@ -21,13 +19,13 @@ class Configuration {
         redisInternal: 6379
     ]
     
-    final Map health = [
+    static final Map HEALTH = [
         timeout: 60,
         interval: 5,
         expectedStatus: 200
     ]
     
-    final Map logging = [
+    static final Map LOGGING = [
         info: "📣 INFO:",
         warning: "⚠️ WARNING:",
         fail: "❌ FAILED:",
@@ -35,11 +33,11 @@ class Configuration {
         success: "✅ SUCCESS:"
     ]
     
-    final Map tags = [
+    static final Map TAGS = [
         pilot: "piloto-cicd"
     ]
     
-    final Map repos = [
+    static final Map REPOS = [
         github: "https://api.github.com/repos/DEV-DTD-CITEVE/TEXPACT-WP2-PPS7/"
     ]
 }
