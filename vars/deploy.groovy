@@ -15,13 +15,13 @@ import com.citeve.devops.core.adapters.backup.MongoBackupAdapter
 def call(Map params = [:]) {
     // No more Configuration.instance - access static fields directly
     
-    def userConfig = loadConfiguration(params)
-    def project = buildProject(userConfig)
+    def userConfig = this.loadConfiguration(params)
+    def project = this.buildProject(userConfig)
     
     def containerAdapter = new DockerContainerAdapter()
     def networkAdapter = new DockerNetworkAdapter()
     def proxyAdapter = new NginxProxyAdapter()
-    def backupAdapter = detectBackupAdapter(userConfig)
+    def backupAdapter = this.detectBackupAdapter(userConfig)
     
     pipeline {
         agent any
