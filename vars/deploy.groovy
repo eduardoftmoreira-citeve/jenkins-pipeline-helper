@@ -1,9 +1,16 @@
 #!/usr/bin/env groovy
 
-import com.citeve.devops.core.config.*
-import com.citeve.devops.core.model.*
-import com.citeve.devops.core.ports.*
-import com.citeve.devops.core.adapters.docker.*
+import com.citeve.devops.core.config.Configuration
+import com.citeve.devops.core.model.Project
+import com.citeve.devops.core.model.Component
+import com.citeve.devops.core.ports.ContainerPort
+import com.citeve.devops.core.ports.NetworkPort
+import com.citeve.devops.core.ports.BackupPort
+import com.citeve.devops.core.ports.ProxyPort
+import com.citeve.devops.core.adapters.docker.DockerContainerAdapter
+import com.citeve.devops.core.adapters.docker.DockerNetworkAdapter
+import com.citeve.devops.core.adapters.nginx.NginxProxyAdapter
+import com.citeve.devops.core.adapters.backup.MongoBackupAdapter
 
 def call(Map params = [:]) {
     def config = Configuration.instance
