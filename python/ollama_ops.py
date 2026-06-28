@@ -14,6 +14,7 @@ class OllamaOps:
         if not diff_content:
             return "No changes to review."
         
+        #this is for demonstration purposes, for real production use a more detailed prompt will probably be needed
         prompt = f"You are a Senior Developer. Review this diff:\n\n{diff_content}"
         
         payload = {
