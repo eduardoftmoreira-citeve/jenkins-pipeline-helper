@@ -1,3 +1,5 @@
+from config import Configuration
+
 #represents the different services/containers of a project
 class Component:
     def __init__(self, name, config):
