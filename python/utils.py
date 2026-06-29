@@ -4,6 +4,16 @@ import subprocess
 import time
 from config import Configuration
 
+def get_database_container_name(project, component, branch):
+    """Determine database container name based on branch"""
+    # Check if branch is in production alias list
+    production_branches = Configuration.get_branch_aliases().get('production', [])
+    
+    if branch in production_branches:
+        return f"{project.name}-{component.name}-prod"
+    else:
+        return f"{project.name}-{component.name}-shared"
+
 def get_config_file(branch):
     """Return the appropriate config file for the branch"""
     environment = detect_environment(branch)

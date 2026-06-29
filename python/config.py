@@ -18,6 +18,8 @@ class Configuration:
         'development': 'app-config.dev.yaml',
         'default': 'app-config.yaml'
     }
+
+    _INFRASTRUCTURE_TYPES = ['mongo', 'postgres', 'mysql', 'redis']
     
     _PATHS = {
         'backup_dir': '/home/emoreira/cicd-poc/backups',
@@ -69,6 +71,10 @@ class Configuration:
         'model': 'qwen2.5-coder:7b',
         'timeout': 120
     }
+
+    @staticmethod
+    def get_infrastructure_types():
+        return Configuration._INFRASTRUCTURE_TYPES
     
     @staticmethod
     def get_ollama_url():

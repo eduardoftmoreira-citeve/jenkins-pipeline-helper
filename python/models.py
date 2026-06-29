@@ -27,8 +27,7 @@ class Component:
         return bool(self.build_command)
     
     def is_infrastructure(self):
-        return self.type in ['mongo', 'postgres', 'mysql', 'redis']
-
+        return self.type in Configuration.get_infrastructure_types()
 
 #represents the project itself, containing all project components and the project environment
 class Project:

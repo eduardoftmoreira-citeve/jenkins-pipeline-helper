@@ -32,34 +32,55 @@ class CleanupOps:
         parts = container_name.split('-')
         return '-'.join(parts[2:])
     
+    def _cleanup_mongo_database(self, container_name, db_name):
+        run_command(
+            f"docker exec {container_name} mongosh --eval \"db.getSiblingDB('{db_name}').dropDatabase()\" 2>/dev/null || true",
+            check=False
+        )
+    
+    def _cleanup_postgres_database(self, container_name, db_name):
+        run_command(
+            f"docker exec {container_name} dropdb -U postgres {db_name} 2>/dev/null || true",
+            check=False
+        )
+    
     def cleanup_orphaned(self, project, repo_url):
         print(f"{Configuration.get_log_info()} Checking for orphaned resources...")
         
         active_branches = self._get_active_branches(repo_url)
-        
         containers = self.docker.get_all_containers(f"{project.name}-")
         
         for container in containers:
             if not container:
                 continue
             
-            branch = self._extract_branch(container)
+            parts = container.split('-')
+            branch = '-'.join(parts[2:])
             
             if branch not in active_branches:
-                print(f"{Configuration.get_log_warning()} Removing orphaned container: {container}")
+                if 'shared' in container:
+                    print(f"{Configuration.get_log_warning()} Dropping orphaned database for branch '{branch}' from shared container")
+                    
+                    if 'mongo' in container:
+                        db_name = f"{project.name}_{branch.replace('-', '_')}"
+                        self._cleanup_mongo_database(container, db_name)
+                    
+                    elif 'postgres' in container:
+                        db_name = f"{project.name}_{branch.replace('-', '_')}"
+                        self._cleanup_postgres_database(container, db_name)
+                    
+                    continue
                 
+                print(f"{Configuration.get_log_warning()} Removing orphaned container: {container}")
                 self.docker.remove_container(container)
                 
                 if 'mongo' in container:
-                    self._cleanup_mongo_database(project, branch)
+                    db_name = f"{project.name}_{branch.replace('-', '_')}"
+                    self._cleanup_mongo_database(container, db_name)
                 
                 if 'postgres' in container:
-                    self._cleanup_postgres_database(project, branch)
-                
-                redis_container = f"{project.name}-redis-{branch}"
-                if self.docker.container_exists(redis_container):
-                    print(f"{Configuration.get_log_warning()} Removing orphaned Redis: {redis_container}")
-                    self.docker.remove_container(redis_container)
+                    db_name = f"{project.name}_{branch.replace('-', '_')}"
+                    self._cleanup_postgres_database(container, db_name)
                 
                 self.nginx.remove_config(project, branch)
         
@@ -67,22 +88,6 @@ class CleanupOps:
         self.docker.prune_images()
         
         print(f"{Configuration.get_log_success()} Cleanup completed")
-    
-    def _cleanup_mongo_database(self, project, branch):
-        db_name = f"{project.name}_{branch.replace('-', '_')}"
-        container_name = f"{project.name}-mongo-{branch}"
-        run_command(
-            f"docker exec {container_name} mongosh --eval \"db.getSiblingDB('{db_name}').dropDatabase()\" 2>/dev/null || true",
-            check=False
-        )
-    
-    def _cleanup_postgres_database(self, project, branch):
-        db_name = f"{project.name}_{branch.replace('-', '_')}"
-        container_name = f"{project.name}-postgres-{branch}"
-        run_command(
-            f"docker exec {container_name} dropdb -U postgres {db_name} 2>/dev/null || true",
-            check=False
-        )
     
     def scheduled_health_check(self, project, branch):
         print(f"{Configuration.get_log_info()} Running scheduled health check for {project.name}/{branch}")

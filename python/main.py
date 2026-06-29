@@ -17,7 +17,8 @@ from utils import (
     wait_for_health,
     clean_branch,
     get_config_file,
-    load_config
+    load_config,
+    get_database_container_name
 )
 
 def main():
@@ -63,7 +64,10 @@ def main():
     project.port = allocate_port(project)
     
     for component in project.components:
-        component.container_name = f"{project.name}-{component.name}-{branch}"
+        if component.is_infrastructure():
+            component.container_name = get_database_container_name(project, component, branch)
+        else:
+            component.container_name = f"{project.name}-{component.name}-{branch}"
         component.network = project.net_name
     
     if not is_pr:

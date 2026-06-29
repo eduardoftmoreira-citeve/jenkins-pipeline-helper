@@ -15,6 +15,11 @@ class DockerOps:
     def start_container(self, component, network):
         """Start a container from a component"""
         container_name = component.container_name or f"{component.name}-{component.type}"
+
+        if 'shared' in container_name and self.container_exists(container_name):
+            print(f"{Configuration.get_log_info()} Shared container {container_name} already exists, skipping start")
+            return container_name
+
         env_vars = build_env_vars(component.env)
         port_mapping = f"-p {component.port}:{component.port}" if component.port else ""
         volume_mount = f"-v {component.name}_data:/data" if component.data_volume else ""
