@@ -3,13 +3,15 @@
 def call(Map params = [:]) {
     node('python-agent') {
         try {
+            echo "checkpoint #1"
+
             def configFile = params.file ?: 'app-config.yaml'
             def config = readYaml(file: configFile)
             def configJson = groovy.json.JsonOutput.toJson(config)
             
             def repoUrl = scm.userRemoteConfigs[0]?.url ?: ''
             
-            echo "checkpoint #1"
+            echo "checkpoint #2"
             
             sh """
                 echo "=== Starting Python script ==="
