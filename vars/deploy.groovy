@@ -1,13 +1,15 @@
 #!/usr/bin/env groovy
 
-def call(Map params = [:]) {
+def call(debug = false) {
     try {
         echo "📣 Deploy started"
+
+        def debugFlag = debug ? '--debug' : ''
         
         def repoUrl = scm.userRemoteConfigs[0]?.url ?: ''
         def configFile = params.file ?: 'app-config.yaml'
         
-        // Copy Python files from library resources to workspace
+        // Copy Python files from library resources to workspace -- needed to include project files in python files' scope
         def pythonFiles = [
             'main.py',
             'config.py',
@@ -40,12 +42,16 @@ def call(Map params = [:]) {
                 --change-target '${env.CHANGE_TARGET}' \
                 --workspace '${env.WORKSPACE}' \
                 --repo-url '${repoUrl}' \
-                --config-file '${configFile}'
+                --config-file '${configFile}' \
+                ${debugFlag}
         """
         
         echo "✅ Deployment completed successfully!"
         
     } catch (Exception e) {
+        echo "❌ Deployment failed!"
+        echo "Error: ${e.getMessage()}"
+
         def authorEmail = sh(
             script: "git log -1 --format='%ae'",
             returnStdout: true
@@ -64,8 +70,7 @@ def call(Map params = [:]) {
                 <p><a href="${env.BUILD_URL}">View Console Output</a></p>
             """
         )
-        
-        echo "❌ FAILED: Error: ${e.getMessage()}"        
+
         throw e
     }
 }
