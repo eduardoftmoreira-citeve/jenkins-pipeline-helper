@@ -22,38 +22,33 @@ class DockerOps:
 
         env_dict = component.env.copy() if component.env else {}
         
-        print(f"{Configuration.get_log_debug()} Initial env_dict: {env_dict}")
-        
+        # ✅ Inject BASE_PATH for the API component
         if component.name == 'api':
-            print(f"{Configuration.get_log_debug()} Detected API component, injecting URIs...")
-            
+            # Generate base path from project and branch
+            base_path = f"/{Configuration.get_pilot_tag()}/{component._project.name}/{component._project.branch}"
+            env_dict['BASE_PATH'] = base_path
+            print(f"{Configuration.get_log_info()} Injected BASE_PATH: {base_path}")
+        
+        # Inject Redis and MongoDB URIs for API services
+        if component.name == 'api':
             redis_container = None
             mongo_container = None
             
-            if hasattr(component, '_project'):
-                for comp in component._project.components:
-                    if comp.is_infrastructure and comp.type == 'redis':
-                        redis_container = comp.container_name
-                        print(f"{Configuration.get_log_debug()} Found Redis container: {redis_container}")
-                    elif comp.is_infrastructure and comp.type == 'mongo':
-                        mongo_container = comp.container_name
-                        print(f"{Configuration.get_log_debug()} Found MongoDB container: {mongo_container}")
-            else:
-                print(f"{Configuration.get_log_warning()} Component has no _project reference!")
+            for comp in component._project.components if hasattr(component, '_project') else []:
+                if comp.is_infrastructure and comp.type == 'redis':
+                    redis_container = comp.container_name
+                elif comp.is_infrastructure and comp.type == 'mongo':
+                    mongo_container = comp.container_name
             
             if redis_container:
                 redis_port = env_dict.get('REDIS_PORT', '6379')
                 env_dict['REDIS_URI'] = f"redis://{redis_container}:{redis_port}"
                 print(f"{Configuration.get_log_info()} Injected Redis URI: {env_dict['REDIS_URI']}")
-            else:
-                print(f"{Configuration.get_log_warning()} No Redis container found!")
             
             if mongo_container:
                 mongo_port = env_dict.get('MONGO_PORT', '27017')
                 env_dict['MONGO_URI'] = f"mongodb://{mongo_container}:{mongo_port}"
                 print(f"{Configuration.get_log_info()} Injected MongoDB URI: {env_dict['MONGO_URI']}")
-        
-        print(f"{Configuration.get_log_debug()} Final env_dict: {env_dict}")
             
         env_vars = build_env_vars(env_dict)
         
