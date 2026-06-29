@@ -1,6 +1,9 @@
 #!/usr/bin/env groovy
 
-def call(debug = false) {
+def call(Map config = [:]) {
+    def debug = config.get('debug',false)
+    def enableNotifications = config.get('enableNotifications',true)
+
     try {
         echo "📣 Deploy started"
 
@@ -52,7 +55,8 @@ def call(debug = false) {
         echo "❌ Deployment failed!"
         echo "Error: ${e.getMessage()}"
 
-        def authorEmail = sh(
+        if (enableNotifications) {
+            def authorEmail = sh(
             script: "git log -1 --format='%ae'",
             returnStdout: true
         ).trim()
@@ -72,5 +76,7 @@ def call(debug = false) {
         )
 
         throw e
+        }
+
     }
 }
