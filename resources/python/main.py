@@ -12,6 +12,7 @@ from nginx_ops import NginxOps
 from cleanup_ops import CleanupOps
 from github_ops import GitHubOps
 from ollama_ops import OllamaOps
+from node_ops import NodeOps
 from utils import (
     is_authorized_branch,
     detect_environment,
@@ -22,8 +23,6 @@ from utils import (
     load_config,
     get_database_container_name
 )
-
-from node_ops import ensure_nodejs, is_nodejs_component, build_node_project
 
 def main():
     parser = argparse.ArgumentParser()
@@ -53,17 +52,11 @@ def main():
         is_scheduled = False
         
         project = Project(config)
+        
+        
         for name, service_config in config['services'].items():
             project.add_component(Component(name, service_config))
-            
-        has_nodejs = any(is_nodejs_component(c) for c in project.components)
-        if has_nodejs:
-            print(f"{Configuration.get_log_info()} Node.js components detected in project")
-            if ensure_nodejs():
-                print(f"{Configuration.get_log_success()} Node.js is ready")
-            else:
-                print(f"{Configuration.get_log_fail()} Failed to ensure Node.js installation")
-                sys.exit(1)
+        
         
         print(f"{Configuration.get_log_info()} Deploying {project.name}")
         print(f"{Configuration.get_log_info()} Branch: {branch}")
@@ -76,6 +69,18 @@ def main():
         cleanup = CleanupOps()
         github = GitHubOps(args.repo_url)
         ollama = OllamaOps()
+        node = NodeOps()
+        
+            
+        has_nodejs = any(c.is_nodejs() for c in project.components)
+
+        if has_nodejs:
+            print(f"{Configuration.get_log_info()} Node.js components detected in project")
+            if node.ensure_nodejs():
+                print(f"{Configuration.get_log_success()} Node.js is ready")
+            else:
+                print(f"{Configuration.get_log_fail()} Failed to ensure Node.js installation")
+                sys.exit(1)
         
         if not is_authorized_branch(branch):
             print(f"{Configuration.get_log_fail()} Branch '{branch}' not authorized.")
