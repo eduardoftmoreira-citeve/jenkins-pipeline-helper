@@ -20,7 +20,30 @@ class DockerOps:
             print(f"{Configuration.get_log_info()} Shared container {container_name} already exists, skipping start")
             return container_name
 
-        env_vars = build_env_vars(component.env)
+        env_dict = component.env.copy() if component.env else {}
+        
+        # ✅ Inject Redis and MongoDB URIs for API services
+        if component.name == 'api':
+            redis_container = None
+            mongo_container = None
+            
+            for comp in component._project.components if hasattr(component, '_project') else []:
+                if comp.is_infrastructure and comp.type == 'redis':
+                    redis_container = comp.container_name
+                elif comp.is_infrastructure and comp.type == 'mongo':
+                    mongo_container = comp.container_name
+            
+            if redis_container:
+                redis_port = env_dict.get('REDIS_PORT', '6379')
+                env_dict['REDIS_URI'] = f"redis://{redis_container}:{redis_port}"
+                print(f"{Configuration.get_log_info()} Injected Redis URI: {env_dict['REDIS_URI']}")
+            
+            if mongo_container:
+                mongo_port = env_dict.get('MONGO_PORT', '27017')
+                env_dict['MONGO_URI'] = f"mongodb://{mongo_container}:{mongo_port}"
+                print(f"{Configuration.get_log_info()} Injected MongoDB URI: {env_dict['MONGO_URI']}")
+        
+        env_vars = build_env_vars(env_dict)
         
         if component.is_deployable() and component.host_port and component.port:
             port_mapping = f"-p {component.host_port}:{component.port}"
@@ -45,7 +68,7 @@ class DockerOps:
         """
         run_command(cmd, check=True)
         return container_name
-    
+        
     def rescue_container(self, component):
         max_retries = Configuration.get_max_retries()
         wait_time = Configuration.get_wait_time()
