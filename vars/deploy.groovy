@@ -1,37 +1,35 @@
 #!/usr/bin/env groovy
 
 def call(Map params = [:]) {
-    node('python-agent') {
-        try {
-            echo "checkpoint #1"
+    try {
+        echo "checkpoint #1"
 
-            def configFile = params.file ?: 'app-config.yaml'
-            def config = readYaml(file: configFile)
-            def configJson = groovy.json.JsonOutput.toJson(config)
-            
-            def repoUrl = scm.userRemoteConfigs[0]?.url ?: ''
-            
-            echo "checkpoint #2"
-            
-            sh """
-                echo "=== Starting Python script ==="
-                python3 ${env.WORKSPACE}/python/main.py \
-                    --config '${configJson}' \
-                    --branch '${env.BRANCH_NAME}' \
-                    --build-number '${env.BUILD_NUMBER}' \
-                    --change-id '${env.CHANGE_ID}' \
-                    --change-target '${env.CHANGE_TARGET}' \
-                    --workspace '${env.WORKSPACE}' \
-                    --repo-url '${repoUrl}'
-                echo "=== Python script finished ==="
-            """
-            
-            echo "✅ Deployment completed successfully!"
-            
-        } catch (Exception e) {
-            notifyFailure()
-            throw e
-        }
+        def configFile = params.file ?: 'app-config.yaml'
+        def config = readYaml(file: configFile)
+        def configJson = groovy.json.JsonOutput.toJson(config)
+        
+        def repoUrl = scm.userRemoteConfigs[0]?.url ?: ''
+        
+        echo "checkpoint #2"
+        
+        sh """
+            echo "=== Starting Python script ==="
+            python3 ${env.WORKSPACE}/python/main.py \
+                --config '${configJson}' \
+                --branch '${env.BRANCH_NAME}' \
+                --build-number '${env.BUILD_NUMBER}' \
+                --change-id '${env.CHANGE_ID}' \
+                --change-target '${env.CHANGE_TARGET}' \
+                --workspace '${env.WORKSPACE}' \
+                --repo-url '${repoUrl}'
+            echo "=== Python script finished ==="
+        """
+        
+        echo "✅ Deployment completed successfully!"
+        
+    } catch (Exception e) {
+        notifyFailure()
+        throw e
     }
 }
 
