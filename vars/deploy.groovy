@@ -59,24 +59,24 @@ def call(Map config = [:]) {
             def authorEmail = sh(
             script: "git log -1 --format='%ae'",
             returnStdout: true
-        ).trim()
+            ).trim()
         
-        def recipient = authorEmail ?: "devops@citeve.pt"
-        
-        emailext(
-            to: recipient,
-            subject: "❌ Pipeline Failed: ${env.JOB_NAME} [${env.CLEAN_BRANCH}]",
-            body: """
-                <h2>Build Failed</h2>
-                <p><b>Project:</b> ${env.JOB_NAME}</p>
-                <p><b>Branch:</b> ${env.CLEAN_BRANCH}</p>
-                <p><b>Build Number:</b> ${env.BUILD_NUMBER}</p>
-                <p><a href="${env.BUILD_URL}">View Console Output</a></p>
-            """
-        )
-
-        throw e
+            def recipient = authorEmail ?: "devops@citeve.pt"
+            
+            emailext(
+                to: recipient,
+                subject: "❌ Pipeline Failed: ${env.JOB_NAME} [${env.CLEAN_BRANCH}]",
+                body: """
+                    <h2>Build Failed</h2>
+                    <p><b>Project:</b> ${env.JOB_NAME}</p>
+                    <p><b>Branch:</b> ${env.CLEAN_BRANCH}</p>
+                    <p><b>Build Number:</b> ${env.BUILD_NUMBER}</p>
+                    <p><a href="${env.BUILD_URL}">View Console Output</a></p>
+                """
+            )
         }
 
+        throw e
     }
+
 }
