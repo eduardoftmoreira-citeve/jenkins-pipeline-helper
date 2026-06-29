@@ -9,6 +9,8 @@ def call(Map params = [:]) {
             
             def repoUrl = scm.userRemoteConfigs[0]?.url ?: ''
             
+            echo "checkpoint #1"
+            
             sh """
                 echo "=== Starting Python script ==="
                 python3 ${env.WORKSPACE}/python/main.py \
