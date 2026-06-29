@@ -10,6 +10,7 @@ def call(Map params = [:]) {
             def repoUrl = scm.userRemoteConfigs[0]?.url ?: ''
             
             sh """
+                echo "=== Starting Python script ==="
                 python3 ${env.WORKSPACE}/python/main.py \
                     --config '${configJson}' \
                     --branch '${env.BRANCH_NAME}' \
@@ -18,6 +19,7 @@ def call(Map params = [:]) {
                     --change-target '${env.CHANGE_TARGET}' \
                     --workspace '${env.WORKSPACE}' \
                     --repo-url '${repoUrl}'
+                echo "=== Python script finished ==="
             """
             
             echo "✅ Deployment completed successfully!"
