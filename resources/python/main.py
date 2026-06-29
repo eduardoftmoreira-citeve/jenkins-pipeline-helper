@@ -77,7 +77,7 @@ def main():
                 component.container_name = get_database_container_name(project, component, branch)
             else:
                 component.container_name = f"{project.name}-{component.name}-{branch}"
-            component.network = project.net_name
+            component.network = project.get_network_name()
         
         if not is_pr:
             print(f"{Configuration.get_log_info()} Cleaning up orphaned resources...")

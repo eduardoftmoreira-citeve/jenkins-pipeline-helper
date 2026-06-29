@@ -47,5 +47,8 @@ class Project:
                 return component
         return None
     
+    def get_network_name(self):
+        return f"{self.name}-net"
+    
     def get_services_by_type(self, service_type):
         return [c for c in self.components if c.type == service_type]
