@@ -24,7 +24,7 @@ RUN curl -fsSL https://get.docker.com -o get-docker.sh \
     && sh get-docker.sh --no-start-container
 
 COPY resources/python/requirements.txt /tmp/requirements.txt
-RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
+RUN pip3 install --no-cache-dir --break-system-packages -r /tmp/requirements.txt
 
 # TEST FOR DOCKER INSTALLATIO
 RUN docker --version
