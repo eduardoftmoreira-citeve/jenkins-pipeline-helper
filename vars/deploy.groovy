@@ -65,6 +65,7 @@ def call(Map params = [:]) {
             """
         )
         
+        echo "❌ FAILED: Error: ${e.getMessage()}"        
         throw e
     }
 }
