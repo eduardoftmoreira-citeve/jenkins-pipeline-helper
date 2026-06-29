@@ -2,8 +2,34 @@
 
 def call(Map params = [:]) {
     try {
+        echo "📣 Deploy started"
+        
         def repoUrl = scm.userRemoteConfigs[0]?.url ?: ''
         def configFile = params.file ?: 'app-config.yaml'
+        
+        // Copy Python files from library resources to workspace
+        def pythonFiles = [
+            'main.py',
+            'config.py',
+            'models.py',
+            'utils.py',
+            'docker_ops.py',
+            'nginx_ops.py',
+            'cleanup_ops.py',
+            'github_ops.py',
+            'ollama_ops.py',
+            'health_ops.py',
+            '__init__.py'
+        ]
+        
+        sh "mkdir -p ${env.WORKSPACE}/python"
+        
+        pythonFiles.each { file ->
+            def content = libraryResource("python/${file}")
+            writeFile file: "${env.WORKSPACE}/python/${file}", text: content
+        }
+        
+        echo "📣 Python files copied to workspace"
         
         sh """
             cd ${env.WORKSPACE}
