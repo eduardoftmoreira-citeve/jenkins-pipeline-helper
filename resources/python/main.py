@@ -46,7 +46,8 @@ def main():
         
         config = load_config(branch, args.config_file)
         
-        is_pr = bool(args.change_id)
+        is_pr = args.change_id and args.change_id != 'null' and args.change_id != 'None'
+        is_pr = bool(is_pr)
         is_scheduled = False
         
         project = Project(config)
