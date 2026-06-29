@@ -1,4 +1,4 @@
-from .cleanup import CleanupOps
+from .cleanup_ops import CleanupOps
 from .nginx_ops import NginxOps
 from .github_ops import GitHubOps
 from .ollama_ops import OllamaOps
@@ -14,6 +14,9 @@ from .utils import (
     load_config,
     get_database_container_name
 )
+from .node_ops import ensure_nodejs, is_nodejs_component, build_node_project
+from .docker_ops import DockerOps
+
 
 __all__ = [
     'DockerOps',

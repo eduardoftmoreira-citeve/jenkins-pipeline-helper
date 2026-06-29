@@ -23,6 +23,8 @@ from utils import (
     get_database_container_name
 )
 
+from node_ops import ensure_nodejs, is_nodejs_component, build_node_project
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--branch', required=True)
@@ -53,6 +55,15 @@ def main():
         project = Project(config)
         for name, service_config in config['services'].items():
             project.add_component(Component(name, service_config))
+            
+        has_nodejs = any(is_nodejs_component(c) for c in project.components)
+        if has_nodejs:
+            print(f"{Configuration.get_log_info()} Node.js components detected in project")
+            if ensure_nodejs():
+                print(f"{Configuration.get_log_success()} Node.js is ready")
+            else:
+                print(f"{Configuration.get_log_fail()} Failed to ensure Node.js installation")
+                sys.exit(1)
         
         print(f"{Configuration.get_log_info()} Deploying {project.name}")
         print(f"{Configuration.get_log_info()} Branch: {branch}")
