@@ -39,6 +39,7 @@ def call(Map config = [:]) {
             
             echo "========================================="
         """
+        }
 
         def repoUrl = scm.userRemoteConfigs[0]?.url ?: ''
         def configFile = params.file ?: 'app-config.yaml'
