@@ -29,3 +29,8 @@ RUN docker --version
 
 USER jenkins
 WORKDIR /home/jenkins
+
+#agent rebuild cheatsheet:
+#docker build -f Dockerfile.agent -t python-agent:latest .
+#docker tag python-agent:latest localhost:5000/python-agent:latest
+#docker push localhost:5000/python-agent:latest
