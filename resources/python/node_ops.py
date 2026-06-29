@@ -60,7 +60,7 @@ class NodeOps:
             return True
         
         print(f"{Configuration.get_log_info()} Running npm install...")
-        subprocess.run(['npm', 'install'], cwd=project_path, check=True)
+        subprocess.run(['npm', 'install', '--legacy-peer-deps'], cwd=project_path, check=True)
         
         if component.has_build_command():
             print(f"{Configuration.get_log_info()} Running build...")
