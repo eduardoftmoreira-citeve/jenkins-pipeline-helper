@@ -39,11 +39,11 @@ def main():
     if args.debug:
         print("DEBUGGING ENABLED")
         print(f"Args: {args}")
-
-    branch = clean_branch(args.branch)
-    environment = detect_environment(branch)
     
     try:
+        branch = clean_branch(args.branch)
+        environment = detect_environment(branch)
+        
         config = load_config(branch, args.config_file)
         
         is_pr = bool(args.change_id)
