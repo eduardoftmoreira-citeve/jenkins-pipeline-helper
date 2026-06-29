@@ -28,5 +28,6 @@ __all__ = [
     'detect_environment',
     'allocate_port',
     'wait_for_health',
-    'clean_branch'
+    'clean_branch',
+    'get_database_container_name'
 ]
