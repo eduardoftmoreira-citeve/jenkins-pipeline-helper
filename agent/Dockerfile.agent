@@ -23,7 +23,7 @@ RUN groupadd -f docker && usermod -aG docker jenkins
 RUN curl -fsSL https://get.docker.com -o get-docker.sh \
     && sh get-docker.sh --no-start-container
 
-COPY ../python/requirements.txt /tmp/requirements.txt
+COPY ../resources/python/requirements.txt /tmp/requirements.txt
 RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
 
 # TEST FOR DOCKER INSTALLATIO
@@ -33,6 +33,4 @@ USER jenkins
 WORKDIR /home/jenkins
 
 #agent rebuild cheatsheet:
-#docker build -f Dockerfile.agent -t python-agent:latest .
-#docker tag python-agent:latest localhost:5000/python-agent:latest
-#docker push localhost:5000/python-agent:latest
+#docker build -f Dockerfile.agent -t python-agent:latest . && docker tag python-agent:latest localhost:5000/python-agent:latest && docker push localhost:5000/python-agent:latest
