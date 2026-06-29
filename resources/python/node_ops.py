@@ -30,7 +30,6 @@ class NodeOps:
             setup_script = subprocess.run(
                 ['curl', '-fsSL', 'https://deb.nodesource.com/setup_20.x'],
                 capture_output=True,
-                text=True,
                 check=True
             )
             subprocess.run(['bash'], input=setup_script.stdout, check=True)
