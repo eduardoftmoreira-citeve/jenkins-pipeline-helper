@@ -7,7 +7,7 @@ from config import Configuration
 from models import Project, Component
 from docker_ops import DockerOps
 from nginx_ops import NginxOps
-from cleanup import CleanupOps
+from cleanup_ops import CleanupOps
 from github_ops import GitHubOps
 from ollama_ops import OllamaOps
 from utils import (
