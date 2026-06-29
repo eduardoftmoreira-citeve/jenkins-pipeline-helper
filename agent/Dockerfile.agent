@@ -18,8 +18,11 @@ RUN pip3 install --no-cache-dir --break-system-packages \
     python-dotenv \
     jenkinsapi
 
-RUN groupadd -f docker && usermod -aG docker jenkins
-
+RUN groupadd -f docker && \
+    groupadd -f systemd-network && \
+    usermod -aG docker jenkins && \
+    usermod -aG systemd-network jenkins
+    
 RUN curl -fsSL https://get.docker.com -o get-docker.sh \
     && sh get-docker.sh --no-start-container
 
