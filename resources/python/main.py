@@ -86,12 +86,12 @@ def main():
         
         if not is_pr:
             print(f"{Configuration.get_log_info()} Setting up infrastructure...")
-            docker.create_network(project.net_name)
-            docker.connect_to_network(project.net_name, Configuration.get_nginx_container())
+            docker.create_network(project.get_network_name)
+            docker.connect_to_network(project.get_network_name, Configuration.get_nginx_container())
             
             for component in project.components:
                 if component.is_infrastructure():
-                    docker.start_container(component, project.net_name)
+                    docker.start_container(component, project.get_network_name)
         
         if not is_pr:
             print(f"{Configuration.get_log_info()} Building components...")
@@ -103,7 +103,7 @@ def main():
             print(f"{Configuration.get_log_info()} Deploying components...")
             for component in project.components:
                 if component.is_deployable():
-                    docker.start_container(component, project.net_name)
+                    docker.start_container(component, project.get_network_name)
         
         if not is_pr:
             print(f"{Configuration.get_log_info()} Running health checks...")
