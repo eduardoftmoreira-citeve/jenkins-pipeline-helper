@@ -30,8 +30,8 @@ def call(Map params = [:]) {
 }
 
 def notifyFailure() {
-    def authorEmail = sh(script: "git log -1 --format='%ae'", returnStdout: true).trim()
-    def recipient = authorEmail ?: "devops@citeve.pt"
+    def authorEmail = sh(script: "cd ${env.WORKSPACE} && git log -1 --format='%ae'",, returnStdout: true).trim()
+    def recipient = authorEmail ?: "emoreira@citeve.pt"
     
     emailext(
         to: recipient,
