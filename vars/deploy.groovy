@@ -15,6 +15,31 @@ def call(Map config = [:]) {
 
         def debugFlag = debug ? '--debug' : ''
         
+        //docker socket diagnostic
+        if (debug) {
+        sh """
+            echo "========================================="
+            echo "🐳 Docker Diagnostics (Debug Mode)"
+            echo "========================================="
+            
+            echo "--- User Info ---"
+            whoami
+            id
+            echo "--- Groups ---"
+            groups
+            
+            echo "--- Docker Socket ---"
+            ls -la /var/run/docker.sock || echo "❌ Socket not found!"
+            
+            echo "--- Docker Group Check ---"
+            getent group docker || echo "❌ Docker group not found!"
+            
+            echo "--- Test Docker ---"
+            docker ps 2>&1 || echo "❌ Docker not accessible"
+            
+            echo "========================================="
+        """
+
         def repoUrl = scm.userRemoteConfigs[0]?.url ?: ''
         def configFile = params.file ?: 'app-config.yaml'
         
