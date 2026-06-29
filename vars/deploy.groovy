@@ -5,12 +5,6 @@ def call(Map config = [:]) {
     def enableNotifications = config.get('enableNotifications',true)
 
     try {
-        sh """
-            echo "🐳 Checking Docker access..."
-            docker ps && echo "✅ Docker OK!" || echo "❌ Docker not accessible!"
-        """
-
-
         echo "📣 Deploy started"
 
         def debugFlag = debug ? '--debug' : ''

@@ -133,12 +133,27 @@ class DockerOps:
         if component.has_build_command():
             print(f"{Configuration.get_log_info()} Running build commands...")
             
-            # ✅ Split multi-line commands and run each
+            # Split multi-line commands by \n
             commands = [c.strip() for c in component.build_command.split('\n') if c.strip()]
             
             for cmd in commands:
                 print(f"{Configuration.get_log_info()} Running: {cmd}")
-                run_command(cmd, check=True)
+                try:
+                    # ✅ Use shell=True and capture more output
+                    import subprocess
+                    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+                    if result.returncode != 0:
+                        print(f"{Configuration.get_log_fail()} Command failed with exit code: {result.returncode}")
+                        print(f"STDOUT: {result.stdout}")
+                        print(f"STDERR: {result.stderr}")
+                        raise Exception(f"Command failed: {cmd}\nStdout: {result.stdout}\nStderr: {result.stderr}")
+                    else:
+                        print(f"STDOUT: {result.stdout}")
+                        if result.stderr:
+                            print(f"STDERR: {result.stderr}")
+                except Exception as e:
+                    print(f"{Configuration.get_log_fail()} Command failed: {cmd}")
+                    raise
             
             print(f"{Configuration.get_log_success()} Build commands completed")
             
