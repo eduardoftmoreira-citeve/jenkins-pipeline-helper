@@ -1,4 +1,5 @@
 import subprocess
+import os
 from config import Configuration
 from utils import run_command
 
@@ -24,13 +25,13 @@ class NginxOps:
             }}
         """
         
-        with open(conf_name, 'w') as f:
+        locations_dir = Configuration.get_nginx_locations()
+        config_path = os.path.join(locations_dir, conf_name)
+        
+        with open(config_path, 'w') as f:
             f.write(config_content)
         
         nginx_container = Configuration.get_nginx_container()
-        
-        run_command(f"docker cp {conf_name} {nginx_container}:/etc/nginx/locations/{conf_name}", check=True)
-        run_command(f"rm {conf_name}", check=False)
         
         test_result = subprocess.run(
             f"docker exec {nginx_container} nginx -t 2>/dev/null",
@@ -41,17 +42,20 @@ class NginxOps:
             run_command(f"docker exec {nginx_container} nginx -s reload", check=True)
             print(f"{Configuration.get_log_success()} Proxy configured: {base_path}")
         else:
-            run_command(f"docker exec {nginx_container} rm -f /etc/nginx/locations/{conf_name}", check=False)
+            if os.path.exists(config_path):
+                os.remove(config_path)
             print(f"{Configuration.get_log_fail()} Invalid Nginx configuration")
             raise Exception("Invalid Nginx configuration")
     
     def remove_config(self, project, branch):
         """Remove Nginx proxy configuration"""
         conf_name = f"{Configuration.get_pilot_tag()}-{project.name}-{branch}.conf"
-        nginx_container = Configuration.get_nginx_container()
+        locations_dir = Configuration.get_nginx_locations()
+        config_path = os.path.join(locations_dir, conf_name)
         
-        run_command(f"docker exec {nginx_container} rm -f /etc/nginx/locations/{conf_name}", check=False)
-        print(f"{Configuration.get_log_info()} Removed config: {conf_name}")
+        if os.path.exists(config_path):
+            os.remove(config_path)
+            print(f"{Configuration.get_log_info()} Removed config: {conf_name}")
     
     def reload(self):
         """Reload Nginx"""
