@@ -9,8 +9,6 @@ from config import Configuration
 
 
 class Project:
-    """Represents a project with multiple components."""
-    
     def __init__(self, config):
         self.name = config.get('project_name') or config.get('name')
         self.environment = config.get('environment', 'development')
@@ -22,11 +20,13 @@ class Project:
         for name, infra_config in config.get('infrastructure', {}).items():
             component = Component(name, infra_config)
             component.is_infrastructure = True
+            component._project = self 
             self.components.append(component)
         
         for name, service_config in config.get('services', {}).items():
             component = Component(name, service_config)
             component.is_infrastructure = False
+            component._project = self  
             self.components.append(component)
     
     def add_component(self, component):
@@ -52,8 +52,6 @@ class Project:
 
 
 class Component:
-    """Represents a single component/service in the project."""
-    
     def __init__(self, name, config):
         self.name = name
         self.type = config.get('type', '')
@@ -70,6 +68,7 @@ class Component:
         self.network = None
         self.host_port = None
         self.is_infrastructure = False
+        self._project = None  
     
     def get_health_path(self):
         return self.health_check.get('path', '/health')
