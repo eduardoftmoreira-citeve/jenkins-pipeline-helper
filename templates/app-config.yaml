@@ -1,4 +1,14 @@
-project_name: pps7
+project_name: myProject
+
+infrastructure:
+  database:
+    type: mongo
+    image: mongo:7-jammy
+    data_volume: true
+  
+  cache:
+    type: redis
+    image: redis:7
 
 services:
   api:
@@ -6,23 +16,11 @@ services:
     image: node:18
     port: 3000
     build_command: |
-      npm install
+      npm install --legacy-peer-deps
       npm run build
+    env:
+      NODE_ENV: production
+      PORT: 3000
     health_check:
       path: /health
-      status_code: 200
-    env:
-      env: production
-    depends_on:
-      - database
-      - cache
-  
-  database:
-    type: mongo
-    image: mongo:7-jammy
-    data_volume: true
-
-  cache:
-    type: redis 
-    image: redis:7
-    data_volume: true
+      timeout: 30

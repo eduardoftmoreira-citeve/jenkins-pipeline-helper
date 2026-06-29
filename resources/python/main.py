@@ -44,7 +44,6 @@ def main():
     try:
         branch = clean_branch(args.branch)
         environment = detect_environment(branch)
-        
         config = load_config(branch, args.config_file)
         
         is_pr = args.change_id and args.change_id != 'null' and args.change_id != 'None'
@@ -52,11 +51,6 @@ def main():
         is_scheduled = False
         
         project = Project(config)
-        
-        
-        for name, service_config in config['services'].items():
-            project.add_component(Component(name, service_config))
-        
         
         print(f"{Configuration.get_log_info()} Deploying {project.name}")
         print(f"{Configuration.get_log_info()} Branch: {branch}")
@@ -71,7 +65,6 @@ def main():
         ollama = OllamaOps()
         node = NodeOps()
         
-            
         has_nodejs = any(c.is_nodejs() for c in project.components)
 
         if has_nodejs:
@@ -90,10 +83,12 @@ def main():
         project.port = allocate_port(project)
         
         for component in project.components:
-            if component.is_infrastructure():
+            if component.is_infrastructure:
                 component.container_name = get_database_container_name(project, component, branch)
+                component.host_port = None
             else:
                 component.container_name = f"{project.name}-{component.name}-{branch}"
+                component.host_port = project.port
             component.network = project.get_network_name()
         
         if not is_pr:
@@ -106,25 +101,25 @@ def main():
             docker.connect_to_network(project.get_network_name(), Configuration.get_nginx_container())
             
             for component in project.components:
-                if component.is_infrastructure():
+                if component.is_infrastructure:
                     docker.start_container(component, project.get_network_name())
         
         if not is_pr:
             print(f"{Configuration.get_log_info()} Building components...")
             for component in project.components:
-                if component.has_build_command():
+                if not component.is_infrastructure and component.has_build_command():
                     docker.build_container(component)
         
         if not is_pr:
             print(f"{Configuration.get_log_info()} Deploying components...")
             for component in project.components:
-                if component.is_deployable():
+                if not component.is_infrastructure:
                     docker.start_container(component, project.get_network_name())
         
         if not is_pr:
             print(f"{Configuration.get_log_info()} Running health checks...")
             for component in project.components:
-                if component.has_health_check():
+                if not component.is_infrastructure and component.has_health_check():
                     wait_for_health(component, docker)
                     print(f"{Configuration.get_log_success()} {component.name} is healthy")
         
@@ -150,7 +145,6 @@ def main():
     
     except Exception as e:
         print("ERROR ON PIPELINE EXECUTION")
-
         if args.debug:
             print("=" * 60)
             traceback.print_exc()

@@ -18,24 +18,36 @@ class Project:
         self.branch = None
         self.port = None
         self.net_name = f"{self.name}-net" if self.name else None
+        
+        for name, infra_config in config.get('infrastructure', {}).items():
+            component = Component(name, infra_config)
+            component.is_infrastructure = True
+            self.components.append(component)
+        
+        for name, service_config in config.get('services', {}).items():
+            component = Component(name, service_config)
+            component.is_infrastructure = False
+            self.components.append(component)
     
     def add_component(self, component):
-        """Add a component to the project."""
         self.components.append(component)
     
     def get_component(self, name):
-        """Get a component by name."""
         for component in self.components:
             if component.name == name:
                 return component
         return None
     
     def get_network_name(self):
-        """Get the network name for the project."""
         return self.net_name
     
+    def get_infrastructure(self):
+        return [c for c in self.components if c.is_infrastructure]
+    
+    def get_applications(self):
+        return [c for c in self.components if not c.is_infrastructure]
+    
     def get_services_by_type(self, service_type):
-        """Get all components of a specific type."""
         return [c for c in self.components if c.type == service_type]
 
 
@@ -56,9 +68,9 @@ class Component:
         self.source_dir = config.get('source_dir', '.')
         self.container_name = None
         self.network = None
-        self.environment = config.get('environment', {})
-        self.ports = config.get('ports', [])
-        
+        self.host_port = None
+        self.is_infrastructure = False
+    
     def get_health_path(self):
         return self.health_check.get('path', '/health')
     
@@ -70,21 +82,14 @@ class Component:
     
     def has_health_check(self):
         return bool(self.health_check)
-        
+    
     def has_build_command(self):
-        """Check if this component has a build command."""
         return bool(self.build_command and self.build_command.strip())
-        
-    def is_infrastructure(self):
-        """Check if this is an infrastructure component."""
-        return self.type in Configuration.get_infrastructure_types()
     
     def is_deployable(self):
-        """Check if this component should be deployed."""
-        return not self.is_infrastructure()
+        return not self.is_infrastructure
     
     def is_nodejs(self):
-        """Check if this component is a Node.js project."""
         if 'npm' in self.build_command or 'node' in self.build_command:
             return True
         

@@ -1,37 +1,113 @@
-type: object
-required:
-  - project_name
-  - services
-properties:
-  project_name:
-    type: string
-  services:
-    type: object
-    additionalProperties:
+project_name:
+  type: string
+  required: true
+  description: Project name used for container naming, network naming, and routing
+
+environment:
+  type: string
+  required: false
+  default: development
+  description: Environment name (development, staging, production)
+  enum:
+    - development
+    - staging
+    - production
+
+infrastructure:
+  type: object
+  required: false
+  description: Map of infrastructure services (databases, caches, etc.)
+  patternProperties:
+    "^[a-zA-Z0-9_-]+$":
       type: object
       required:
         - type
+        - image
       properties:
         type:
           type: string
+          description: Service type (mongo, postgres, mysql, redis, etc.)
         image:
           type: string
+          description: Docker image with tag
+        data_volume:
+          type: boolean
+          default: false
+          description: Whether to mount a persistent data volume
+        env:
+          type: object
+          additionalProperties:
+            type: string
+          description: Environment variables
+        depends_on:
+          type: array
+          items:
+            type: string
+          description: Dependencies (future use)
+
+services:
+  type: object
+  required: true
+  description: Map of application services (APIs, frontends, backends)
+  patternProperties:
+    "^[a-zA-Z0-9_-]+$":
+      type: object
+      required:
+        - type
+        - image
+        - port
+      properties:
+        type:
+          type: string
+          description: Service type (node, python, java, go, etc.)
+          enum:
+        image:
+          type: string
+          description: Docker image with tag
         port:
           type: integer
+          minimum: 1
+          maximum: 65535
+          description: Container port (internal)
         build_command:
           type: string
+          description: Build command (multi-line supported with |)
+        source_dir:
+          type: string
+          default: .
+          description: Source directory path relative to workspace
+        env:
+          type: object
+          additionalProperties:
+            type: string
+          description: Environment variables
         health_check:
           type: object
           properties:
             path:
               type: string
+              default: /health
+              description: Health check endpoint path
             status_code:
               type: integer
-        env:
-          type: object
+              default: 200
+              description: Expected HTTP status code
+            timeout:
+              type: integer
+              default: 60
+              minimum: 1
+              description: Timeout in seconds
         depends_on:
           type: array
-        data_volume:
-          type: boolean
+          items:
+            type: string
+          description: Service dependencies
         volumes:
           type: array
+          items:
+            type: string
+          description: Volume mounts (host:container)
+        data_volume:
+          type: boolean
+          default: false
+          description: Whether to mount a persistent data volume
