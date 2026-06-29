@@ -40,7 +40,7 @@ def main():
     is_pr = bool(args.change_id)
     is_scheduled = False
     
-    project = Project(config['project'])
+    project = Project(config['project_name'])
     for name, service_config in config['services'].items():
         project.add_component(Component(name, service_config))
     
