@@ -33,4 +33,4 @@ USER jenkins
 WORKDIR /home/jenkins
 
 #agent rebuild cheatsheet: (run in repo root folder)
-#docker build -f Dockerfile.agent -t python-agent:latest . && docker tag python-agent:latest localhost:5000/python-agent:latest && docker push localhost:5000/python-agent:latest
+#docker build -f agent/Dockerfile.agent -t python-agent:latest . && docker tag python-agent:latest localhost:5000/python-agent:latest && docker push localhost:5000/python-agent:lates
