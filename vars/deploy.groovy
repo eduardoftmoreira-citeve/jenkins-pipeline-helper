@@ -56,6 +56,7 @@ def call(Map config = [:]) {
             'github_ops.py',
             'ollama_ops.py',
             'health_ops.py',
+            'node_ops.py',
             '__init__.py'
         ]
         
