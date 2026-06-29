@@ -1,7 +1,7 @@
 #!/usr/bin/env groovy
 
 def call(Map params = [:]) {
-    node {
+    node('python-agent') {
         try {
             def configFile = params.file ?: 'app-config.yaml'
             def config = readYaml(file: configFile)
