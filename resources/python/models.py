@@ -58,9 +58,7 @@ class Component:
         self.network = None
         self.environment = config.get('environment', {})
         self.ports = config.get('ports', [])
-    
-    # ----- Health Check Methods -----
-    
+        
     def get_health_path(self):
         return self.health_check.get('path', '/health')
     
@@ -87,16 +85,13 @@ class Component:
     
     def is_nodejs(self):
         """Check if this component is a Node.js project."""
-        # Check if build command contains npm or node
         if 'npm' in self.build_command or 'node' in self.build_command:
             return True
         
-        # Check for package.json in source directory
         package_json = os.path.join(self.source_dir, 'package.json')
         if os.path.exists(package_json):
             return True
         
-        # Check if type is Node.js
         if self.type and 'node' in self.type.lower():
             return True
         

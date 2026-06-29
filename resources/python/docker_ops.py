@@ -129,9 +129,20 @@ class DockerOps:
         return [c for c in result.stdout.strip().split('\n') if c]
     
     def build_container(self, component):
-        """Build a container from source"""
+        """Build a container from source."""
         if component.has_build_command():
-            run_command(component.build_command, check=True)
+            print(f"{Configuration.get_log_info()} Running build commands...")
+            
+            # ✅ Split multi-line commands and run each
+            commands = [c.strip() for c in component.build_command.split('\n') if c.strip()]
+            
+            for cmd in commands:
+                print(f"{Configuration.get_log_info()} Running: {cmd}")
+                run_command(cmd, check=True)
+            
+            print(f"{Configuration.get_log_success()} Build commands completed")
+            
+            # Run docker build
             run_command(f"docker build -t {component.image} .", check=True)
     
     def is_container_healthy(self, component):
