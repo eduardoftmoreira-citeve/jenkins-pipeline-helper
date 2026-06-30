@@ -6,9 +6,9 @@ import os
 from pathlib import Path
 import re
 import subprocess
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, Optional, Sequence, Tuple
 from urllib.error import HTTPError, URLError
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 from urllib.request import Request, urlopen
 
 from .config import ReviewSettings
@@ -29,6 +29,16 @@ class DiffSnapshot:
 
 
 @dataclass(frozen=True)
+class OpenPullRequest:
+    """The minimum GitHub pull-request data needed by the reviewer."""
+
+    number: str
+    base_branch: str
+    head_branch: str
+    url: Optional[str] = None
+
+
+@dataclass(frozen=True)
 class ReviewResult:
     status: str
     message: str
@@ -38,6 +48,7 @@ class ReviewResult:
     comment_action: Optional[str] = None
     comment_url: Optional[str] = None
     review_text: Optional[str] = None
+    pr_number: Optional[str] = None
 
 
 _SAFE_REF = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/-]*$")
@@ -61,14 +72,22 @@ def _run_git(workspace: Path, arguments: Sequence[str]) -> str:
     return result.stdout
 
 
-def _normalise_base_branch(value: str) -> str:
+def _normalise_branch(value: str, *, label: str) -> str:
     branch = (value or "").strip()
     for prefix in ("refs/heads/", "origin/"):
         if branch.startswith(prefix):
             branch = branch[len(prefix):]
     if not branch or not _SAFE_REF.fullmatch(branch) or branch.startswith("-"):
-        raise ReviewError(f"Invalid pull-request target branch: {value!r}")
+        raise ReviewError(f"Invalid {label} branch: {value!r}")
     return branch
+
+
+def _normalise_base_branch(value: str) -> str:
+    return _normalise_branch(value, label="pull-request target")
+
+
+def _normalise_source_branch(value: str) -> str:
+    return _normalise_branch(value, label="source")
 
 
 def collect_pull_request_diff(
@@ -194,7 +213,7 @@ class GitHubClient:
     def __init__(self, settings: ReviewSettings, token: str):
         if not token:
             raise ReviewError(
-                f"GitHub token is missing. Bind a secret-text credential to {settings.github_token_env}."
+                f"GitHub token is missing from environment variable {settings.github_token_env}."
             )
         self.settings = settings
         self.token = token
@@ -229,6 +248,69 @@ class GitHubClient:
             return json.loads(body)
         except json.JSONDecodeError as exc:
             raise ReviewError("GitHub returned invalid JSON") from exc
+
+    def find_open_pull_request(
+        self,
+        owner: str,
+        repository: str,
+        branch: str,
+    ) -> Optional[OpenPullRequest]:
+        """Find the one open, same-repository PR whose source is ``branch``.
+
+        A normal branch build has no CHANGE_ID or CHANGE_TARGET. GitHub is the
+        source of truth for whether the branch currently has an open PR and for
+        the destination branch whose diff should be reviewed.
+        """
+        source_branch = _normalise_source_branch(branch)
+        encoded_owner = quote(owner, safe="")
+        encoded_repository = quote(repository, safe="")
+        query = urlencode(
+            {
+                "state": "open",
+                "head": f"{owner}:{source_branch}",
+                "per_page": 100,
+            }
+        )
+        pulls = self._request_json(
+            "GET",
+            f"/repos/{encoded_owner}/{encoded_repository}/pulls?{query}",
+        )
+        if not isinstance(pulls, list):
+            raise ReviewError("GitHub returned an unexpected pull-requests response")
+
+        matches: list[OpenPullRequest] = []
+        for pull in pulls:
+            if not isinstance(pull, dict):
+                continue
+            number = pull.get("number")
+            head = pull.get("head")
+            base = pull.get("base")
+            if number is None or not isinstance(head, dict) or not isinstance(base, dict):
+                continue
+            head_ref = head.get("ref")
+            base_ref = base.get("ref")
+            if not isinstance(head_ref, str) or not isinstance(base_ref, str):
+                continue
+            if head_ref != source_branch:
+                continue
+            matches.append(
+                OpenPullRequest(
+                    number=str(number),
+                    base_branch=_normalise_base_branch(base_ref),
+                    head_branch=source_branch,
+                    url=pull.get("html_url") if isinstance(pull.get("html_url"), str) else None,
+                )
+            )
+
+        if not matches:
+            return None
+        if len(matches) != 1:
+            numbers = ", ".join(match.number for match in matches)
+            raise ReviewError(
+                f"Found {len(matches)} open pull requests for branch '{source_branch}' ({numbers}); "
+                "review is skipped until one target pull request remains."
+            )
+        return matches[0]
 
     def upsert_pull_request_comment(self, owner: str, repository: str, pr_number: str, body: str) -> Tuple[str, Optional[str]]:
         encoded_owner = quote(owner, safe="")
@@ -273,58 +355,77 @@ def _comment_body(settings: ReviewSettings, review_text: str, snapshot: DiffSnap
     return body
 
 
-def review_pull_request(
+def review_open_pull_request(
     *,
     settings: ReviewSettings,
     workspace: Path,
     repo_url: str,
-    pr_number: str,
-    base_branch: str,
+    branch: str,
     dry_run: bool = False,
 ) -> ReviewResult:
+    """Review the branch's one matching open pull request, if one exists."""
     if not settings.enabled:
         return ReviewResult(status="skipped", message="PR review is disabled in platform-config.yaml")
     try:
+        owner, repository = parse_repository_coordinates(repo_url)
+        token = os.environ.get(settings.github_token_env, "")
+        github = GitHubClient(settings, token)
+        pull_request = github.find_open_pull_request(owner, repository, branch)
+        if pull_request is None:
+            return ReviewResult(
+                status="skipped",
+                message=f"No open same-repository pull request found for branch '{_normalise_source_branch(branch)}'.",
+            )
+
         snapshot = collect_pull_request_diff(
             workspace,
-            base_branch,
+            pull_request.base_branch,
             max_files=settings.max_files,
             max_characters=settings.max_diff_characters,
         )
         if not snapshot.text:
             return ReviewResult(
                 status="skipped",
-                message="No changed text files to review against the pull-request target.",
+                message=(
+                    f"No changed text files to review for pull request #{pull_request.number} "
+                    f"against '{pull_request.base_branch}'."
+                ),
                 files_reviewed=0,
                 omitted_files=snapshot.omitted_files,
+                pr_number=pull_request.number,
             )
+
         review_text = OllamaClient(settings).generate(build_review_prompt(snapshot))
         if dry_run:
             return ReviewResult(
                 status="reviewed",
-                message="Generated review in dry-run mode; no GitHub comment was published.",
+                message=(
+                    f"Generated review for pull request #{pull_request.number} in dry-run mode; "
+                    "no GitHub comment was published."
+                ),
                 files_reviewed=len(snapshot.files),
                 omitted_files=snapshot.omitted_files,
                 diff_truncated=snapshot.truncated,
                 review_text=review_text,
+                pr_number=pull_request.number,
             )
-        owner, repository = parse_repository_coordinates(repo_url)
-        token = os.environ.get(settings.github_token_env, "")
-        action, url = GitHubClient(settings, token).upsert_pull_request_comment(
+
+        action, url = github.upsert_pull_request_comment(
             owner,
             repository,
-            pr_number,
+            pull_request.number,
             _comment_body(settings, review_text, snapshot),
         )
         return ReviewResult(
             status="published",
-            message=f"{action.title()} the automated PR review comment.",
+            message=f"{action.title()} the automated review comment on pull request #{pull_request.number}.",
             files_reviewed=len(snapshot.files),
             omitted_files=snapshot.omitted_files,
             diff_truncated=snapshot.truncated,
             comment_action=action,
             comment_url=url,
             review_text=review_text,
+            pr_number=pull_request.number,
         )
     except ReviewError as exc:
         if settings.fail_on_error:

@@ -4,16 +4,14 @@ pipeline {
   agent any
 
   stages {
-    stage('Ollama PR review') {
-      when { changeRequest() }
+    stage('Ollama review') {
       steps {
+        // In a normal branch build, this skips when the branch has no open PR.
         reviewPullRequest()
-        //reviewPullRequest(dryRun: true) for no PR comments
       }
     }
 
-    stage('Deploy branch environment') {
-      when { not { changeRequest() } }
+    stage('Deploy') {
       steps {
         deploy()
       }

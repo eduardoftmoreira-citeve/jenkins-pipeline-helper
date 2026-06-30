@@ -1,7 +1,7 @@
 /*
- * GitHub Branch Source is used rather than the generic Git SCM source so Jenkins
- * discovers same-repository pull requests and populates CHANGE_ID/CHANGE_TARGET.
- * Fork pull requests are not discovered by this seed configuration.
+ * GitHub Branch Source discovers ordinary repository branches. Pull requests are
+ * deliberately not discovery targets: a branch build asks GitHub whether its
+ * source branch currently has an open same-repository pull request.
  */
 def projects = [
     'pps7': [
@@ -37,11 +37,6 @@ projects.each { projectName, config ->
                         repository(config.repository)
                         traits {
                             gitHubBranchDiscovery {
-                                strategyId(1)
-                            }
-                            // Discover pull requests from the same repository. This
-                            // creates CHANGE_ID and CHANGE_TARGET for reviewPullRequest().
-                            gitHubPullRequestDiscovery {
                                 strategyId(1)
                             }
                         }

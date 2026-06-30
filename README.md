@@ -52,9 +52,9 @@ maintenance(operation: 'backup', branch: 'main')
 ```
 
 ```groovy
-// Pull-request pipeline stage. The Jenkins credential must be Secret Text and
-// contain a GitHub token with permission to write pull-request/issue comments.
-reviewPullRequest(githubTokenCredentialId: 'github-PAT')
+// Normal branch-build stage. It skips when BRANCH_NAME has no open
+// same-repository pull request. github-PAT is bound internally.
+reviewPullRequest()
 ```
 
 ```groovy
@@ -122,13 +122,15 @@ The Node provider injects `MONGO_URI`, `MONGO_DB_NAME`, `REDIS_URL` and `REDIS_U
 
 ## Pull-request review with Ollama
 
-`reviewPullRequest()` is separate from `deploy()`. It runs only in a Jenkins multibranch pull-request build with `CHANGE_ID` and `CHANGE_TARGET`, fetches the target branch using the existing `origin` remote, collects a bounded diff, sends that diff to the platform-configured Ollama `POST /api/generate` endpoint, and creates or updates one GitHub pull-request timeline comment. Repeated builds update the marked comment instead of adding a comment per build.
+`reviewPullRequest()` is separate from `deploy()`. It runs in an ordinary Jenkins multibranch **branch build**, reads `BRANCH_NAME`, and asks GitHub whether the branch has exactly one open same-repository pull request. When none exists, it prints a skipped message and succeeds without calling Ollama. When exactly one exists, GitHub supplies its base branch; the helper fetches that branch using the existing `origin` remote, collects a bounded diff, sends it to the platform-configured Ollama `POST /api/generate` endpoint, and creates or updates one GitHub pull-request timeline comment. Repeated branch builds update the marked comment instead of adding a comment per build.
 
-The supplied `dsl/jobs.groovy` now uses **GitHub Branch Source** and discovers same-repository pull requests, which is what provides `CHANGE_ID` and `CHANGE_TARGET`. Re-run the seed job after applying this branch. It deliberately does not discover fork pull requests.
+The supplied `dsl/jobs.groovy` uses **GitHub Branch Source** with branch discovery only. It deliberately does **not** enable `gitHubPullRequestDiscovery`, so Jenkins does not create separate PR jobs or rely on `CHANGE_ID`/`CHANGE_TARGET`. Re-run the seed job and re-index multibranch jobs after applying this branch.
 
-The active platform config contains the Ollama endpoint, model, token environment-variable name, bounds and non-blocking policy. No token is committed. To publish a comment, bind a **Secret Text** credential in Jenkins, normally via `reviewPullRequest(githubTokenCredentialId: 'github-PAT')`. The token must be allowed to create and update pull-request timeline comments. `dryRun: true` calls Ollama but does not call GitHub.
+The shared library binds the password from the existing Jenkins **Username with password** credential `github-PAT` as `GITHUB_TOKEN`. Developers call only `reviewPullRequest()` or `reviewPullRequest(dryRun: true)`; they do not provide token IDs, PR numbers, or target branches. A dry run still binds the credential because GitHub must be queried to determine whether an open PR exists. The classic PAT needs access to read pull requests and create/update PR timeline comments, normally `repo` scope for private repositories.
 
-Fork pull requests are skipped by default because exposing a write-capable GitHub token to untrusted fork code is unsafe. `allowForks: true` exists only for a deliberately hardened Jenkins trust model. The committed `fail_on_error: false` policy means unreachable Ollama, a missing token, or a GitHub API error is reported as a skipped review rather than failing the PR pipeline. Change it to `true` once the service is proven reliable and you intentionally want reviews to be required.
+If a branch has multiple open same-repository PRs, the helper skips the review rather than guessing a target. Fork pull requests are outside this branch-only setup. A PR that is opened without a subsequent push is reviewed when the branch is next built; trigger that build manually until you add a webhook policy for PR-open events.
+
+The active platform config contains the Ollama endpoint, model, token environment-variable name, bounds and non-blocking policy. No token is committed. The committed `fail_on_error: false` policy means unreachable Ollama, a missing token, or a GitHub API error is reported as a skipped review rather than failing the branch pipeline. Change it to `true` only after the service is proven reliable and you intentionally want reviews to be required.
 
 ## Providers and maintenance
 

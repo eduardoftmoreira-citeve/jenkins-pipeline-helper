@@ -15,7 +15,7 @@ from deploylib.docker import DockerClient
 from deploylib.engine import DeploymentEngine
 from deploylib.environment import normalize_branch, resolve_environment
 from deploylib.model import ProjectSpec
-from deploylib.review import review_pull_request
+from deploylib.review import review_open_pull_request
 
 
 def active_branches(repo_url: str) -> Set[str]:
@@ -63,8 +63,7 @@ def parser() -> argparse.ArgumentParser:
     review.add_argument("--workspace", required=True)
     review.add_argument("--platform-config", required=True)
     review.add_argument("--repo-url", required=True)
-    review.add_argument("--pr-number", required=True)
-    review.add_argument("--base-branch", required=True)
+    review.add_argument("--branch", required=True, help="Source branch from the normal multibranch build")
     review.add_argument("--dry-run", action="store_true", help="Generate a review without posting to GitHub")
     return root
 
@@ -78,12 +77,11 @@ def main() -> int:
         platform = load_platform_config(Path(args.platform_config).resolve())
 
         if args.command == "review":
-            result = review_pull_request(
+            result = review_open_pull_request(
                 settings=platform.review,
                 workspace=workspace,
                 repo_url=args.repo_url,
-                pr_number=args.pr_number,
-                base_branch=args.base_branch,
+                branch=args.branch,
                 dry_run=args.dry_run,
             )
             print(result.message)

@@ -19,7 +19,7 @@ backups:
   providers:
     mongo:
       # Local-only storage on the physical Nexus server. This is not off-site DR.
-      root_dir: /home/users/emoreira/cicd-poc/backups/mongo
+      root_dir: /home/users/cicd/backups/mongo
       policies:
         production:
           enabled: true
@@ -56,7 +56,7 @@ review:
   max_files: 60
   github:
     api_url: https://api.github.com
-    # reviewPullRequest(githubTokenCredentialId: '...') binds this secret variable.
+    # reviewPullRequest() binds the password of Jenkins credential github-PAT here.
     token_env: GITHUB_TOKEN
     # One marker means repeated builds update one comment instead of spamming a PR.
     comment_marker: '<!-- cicd-ollama-review -->'
