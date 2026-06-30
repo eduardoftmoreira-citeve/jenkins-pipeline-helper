@@ -18,7 +18,7 @@ def projects = [
     // ],
 ]
 
-def allowedBranchRegex = '^(main|master|prod|production|stage|staging|dev|develop|development|feature/.+|bugfix/.+)$'
+def allowedBranchRegex = '^(main|master|prod|production|stage|staging|dev|develop|development|release/.+|bugfix/.+)$'
 
 projects.each { projectName, config ->
     multibranchPipelineJob(projectName) {

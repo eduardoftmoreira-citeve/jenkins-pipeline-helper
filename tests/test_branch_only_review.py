@@ -27,6 +27,13 @@ class BranchOnlyReviewConfigurationTests(unittest.TestCase):
         self.assertNotIn("CHANGE_TARGET", groovy)
         self.assertNotIn("githubTokenCredentialId", groovy)
 
+    def test_cleanup_binds_github_token_for_private_ls_remote(self):
+        groovy = (self.repository / "vars" / "cleanupOrphans.groovy").read_text(encoding="utf-8")
+        self.assertIn("withCredentials", groovy)
+        self.assertIn("credentialsId: 'github-PAT'", groovy)
+        self.assertIn("passwordVariable: 'GITHUB_TOKEN'", groovy)
+        self.assertIn("--repo-url", groovy)
+
 
 if __name__ == "__main__":
     unittest.main()

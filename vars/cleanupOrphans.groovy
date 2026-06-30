@@ -11,19 +11,35 @@ def call(Map options = [:]) {
     def engineDir = "${env.WORKSPACE}/.jenkins-deploy"
     copyEngine(engineDir, files)
     def platformConfig = platformConfigOverride ?: "${engineDir}/platform-config.yaml"
-    withEnv([
-        "DEPLOY_ENGINE=${engineDir}",
-        "DEPLOY_WORKSPACE=${env.WORKSPACE}",
-        "DEPLOY_PLATFORM_CONFIG=${platformConfig}",
-        "DEPLOY_REPO_URL=${repoUrl}"
+
+    def invokeCleanup = {
+        withEnv([
+            "DEPLOY_ENGINE=${engineDir}",
+            "DEPLOY_WORKSPACE=${env.WORKSPACE}",
+            "DEPLOY_PLATFORM_CONFIG=${platformConfig}",
+            "DEPLOY_REPO_URL=${repoUrl}"
+        ]) {
+            sh '''
+                set -eu
+                python3 "$DEPLOY_ENGINE/deploy.py" cleanup \
+                  --workspace "$DEPLOY_WORKSPACE" \
+                  --platform-config "$DEPLOY_PLATFORM_CONFIG" \
+                  --repo-url "$DEPLOY_REPO_URL"
+            '''
+        }
+    }
+
+    // cleanup_orphans() calls git ls-remote for the private application repo.
+    // Bind the same GitHub PAT used by checkout/review so deploy.py can inject
+    // it into the HTTPS remote without exposing it in the Jenkinsfile API.
+    withCredentials([
+        usernamePassword(
+            credentialsId: 'github-PAT',
+            usernameVariable: 'GITHUB_USERNAME',
+            passwordVariable: 'GITHUB_TOKEN'
+        )
     ]) {
-        sh '''
-            set -eu
-            python3 "$DEPLOY_ENGINE/deploy.py" cleanup \
-              --workspace "$DEPLOY_WORKSPACE" \
-              --platform-config "$DEPLOY_PLATFORM_CONFIG" \
-              --repo-url "$DEPLOY_REPO_URL"
-        '''
+        invokeCleanup()
     }
 }
 
