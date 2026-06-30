@@ -52,7 +52,7 @@ jenkins:
             type=bind,source=/home/emoreira/cicd-poc,target=/home/emoreira/cicd-poc
           privileged: true
           user: "root"
-        instanceCapStr: "1"
+        instanceCapStr: "3"
         labelString: "python-agent"
         name: "python-agent"
         pullStrategy: PULL_NEVER
