@@ -69,8 +69,6 @@ class DeploymentEngine:
         self.reporter = reporter or (lambda message: None)
 
     def _network_name(self, project: ProjectSpec, environment: Environment) -> str:
-        # Every environment has its own network. Shared non-prod Mongo joins active
-        # environment networks; Redis and all service containers stay private to one.
         return f"{docker_safe_name(self.platform.network_prefix)}-{project.docker_name}-{environment.docker_name}"
 
     def _context(

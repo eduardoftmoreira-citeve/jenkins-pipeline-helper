@@ -8,7 +8,7 @@ from pathlib import Path
 import subprocess
 import sys
 import traceback
-from typing import Set
+from typing import Any, Dict, Set
 
 from deploylib.command import CommandRunner
 from deploylib.config import load_application_config, load_platform_config
@@ -21,6 +21,37 @@ from deploylib.review import review_open_pull_request
 
 def progress(message: str) -> None:
     print(f"[deploy {datetime.now().strftime('%H:%M:%S')}] {message}", flush=True)
+
+
+def print_deploy_summary(project: ProjectSpec, state: Dict[str, Any], engine: DeploymentEngine) -> None:
+    environment = state.get("environment", {})
+    print("")
+    print("=== Deployment summary ===")
+    print(f"Project: {project.name}")
+    print(f"Branch: {environment.get('branch', 'unknown')}")
+    print(f"Environment: {environment.get('name', 'unknown')} ({environment.get('kind', 'unknown')})")
+    print(f"Network: {state.get('network', 'unknown')}")
+
+    resources = state.get("resources", {})
+    if resources:
+        print("Infrastructure:")
+        for resource in resources.values():
+            container = resource.get("container", "unknown")
+            image = resource.get("image")
+            detail = f" [{image}]" if image else ""
+            print(f"  - {resource.get('name', 'unknown')} ({resource.get('type', 'unknown')}): {container}{detail}")
+
+    services = state.get("services", {})
+    if services:
+        print("Services:")
+        for service in services.values():
+            container = service.get("container", "unknown")
+            image = service.get("image")
+            detail = f" [{image}]" if image else ""
+            print(f"  - {service.get('name', 'unknown')} ({service.get('type', 'unknown')}): {container}{detail}")
+            if service.get("route"):
+                print(f"    App live at: {engine.router.public_url(service['route'])}")
+    print("==========================")
 
 
 def active_branches(repo_url: str) -> Set[str]:
@@ -103,10 +134,7 @@ def main() -> int:
         if args.command == "deploy":
             environment = resolve_environment(args.branch)
             state = engine.deploy(project, environment, workspace, args.build_number)
-            print(f"Deployed {project.name} to {environment.name}")
-            for service in state.get("services", {}).values():
-                if service.get("route"):
-                    print(f"App URL: {engine.router.public_url(service['route'])}")
+            print_deploy_summary(project, state, engine)
             return 0
 
         if args.command == "cleanup":

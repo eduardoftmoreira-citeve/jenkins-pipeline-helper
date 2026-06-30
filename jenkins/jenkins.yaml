@@ -10,7 +10,7 @@ credentials:
     - credentials:
       - usernamePassword:
           id: "github-PAT"
-          password: "{AQAAABAAAAAw9m6+Vy6l/Xn8UmlRBi2f+5VUO+C9xjEqI5+DNcpL08VTZdImHMu0fFWWss/pIMlkhq/LM8fk+nXFQTciKaLd1g==}"
+          password: "{AQAAABAAAAAwhc4Q7qzIFJ2IBWDWCgPi2VhXzdVIK2Fnl1bLI9XRoiEKtjQK8l1s7+eNjRPS8ZPTnyZfoPcr7oxlHjDfutPWuA==}"
           scope: GLOBAL
           username: "eduardoftmoreira-citeve"
       - usernamePassword:
@@ -44,12 +44,12 @@ jenkins:
           - "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock"
           - "type=bind,source=/usr/bin/docker,target=/usr/bin/docker,readonly=true"
           - "type=bind,source=/home/users/cgomes/nginx/locations,target=/home/users/cgomes/nginx/locations"
-          - "type=bind,source=/home/users/emoreira/cicd-poc,target=/home/users/emoreira/cicd-poc"
+          - "type=bind,source=/home/emoreira/cicd-poc,target=/home/emoreira/cicd-poc"
           mountsString: |-
             type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock
             type=bind,source=/usr/bin/docker,target=/usr/bin/docker,readonly=true
             type=bind,source=/home/users/cgomes/nginx/locations,target=/home/users/cgomes/nginx/locations
-            type=bind,source=/home/users/emoreira/cicd-poc,target=/home/users/emoreira/cicd-poc
+            type=bind,source=/home/emoreira/cicd-poc,target=/home/emoreira/cicd-poc
           privileged: true
           user: "root"
         instanceCapStr: "1"
@@ -183,8 +183,10 @@ security:
     }
   scriptApproval:
     approvedScriptHashes:
+    - "SHA512:18bdf45db5059e0eb3b8bf09b323d5bb66b3f4f1a16d811b06a20311d0da3607257090012c65dbf670d0abd95058ffa455a9ddf4c00b78397d95cfc3eaab8996"
     - "SHA512:37e6b6c283b1c00b9428ba8b6baecba38333e4e6f43f47243433c216237b1c25a92f5c96d3abcfc93095514bd6ac6ec93dd63b0a2679361df6967f7e18354f0f"
     - "SHA512:5d5eae577063e79e312e617f51bcd8ff6d4bd8a08603049e00375dfa9fd8231d3f91025f90aa788222f06b1274155417eb1d0817f57cca1dbf9490e14c8662d4"
+    - "SHA512:91f27615653db95f63be5dbd4f14f6628f31bdbcc06a0e8a28ca8cde63d6bc3b2e1ce063d78769620792b158a0cafa612f153236ed3148ee0f3ab9473d3b33b1"
     forceSandbox: false
   updateSiteWarningsConfiguration: {
     }

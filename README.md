@@ -80,6 +80,9 @@ Deployments print timestamped Python progress lines in Jenkins, for example:
 [deploy 14:08:41] App is live at: https://dev.citeve.pt/piloto-cicd/pps7-api/staging/api/
 ```
 
+At the end, Jenkins prints a deployment summary with the branch, environment,
+network, runtime containers and each routed app URL.
+
 ## Branch environments
 
 | Branch | Environment | MongoDB | Redis/network |

@@ -54,6 +54,7 @@ class UnauthenticatedProviderTests(unittest.TestCase):
             network="cicd-demo-prod",
             labels=lambda category, name: {"category": category, "name": name},
             docker=_Docker(),
+            log=lambda message: None,
         )
 
     def test_mongo_uses_no_credentials_or_root_init_variables(self):
