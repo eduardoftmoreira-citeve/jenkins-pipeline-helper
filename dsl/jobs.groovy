@@ -18,6 +18,8 @@ def projects = [
     // ],
 ]
 
+def allowedBranchRegex = '^(main|master|prod|production|stage|staging|dev|develop|development|release/.+|bugfix/.+)$'
+
 projects.each { projectName, config ->
     multibranchPipelineJob(projectName) {
         displayName(projectName)
@@ -38,6 +40,9 @@ projects.each { projectName, config ->
                         traits {
                             gitHubBranchDiscovery {
                                 strategyId(1)
+                            }
+                            headRegexFilter {
+                                regex(allowedBranchRegex)
                             }
                         }
                     }

@@ -9,6 +9,13 @@ class BranchOnlyReviewConfigurationTests(unittest.TestCase):
     def test_job_dsl_discovers_branches_but_not_pr_jobs(self):
         dsl = (self.repository / "dsl" / "jobs.groovy").read_text(encoding="utf-8")
         self.assertIn("gitHubBranchDiscovery", dsl)
+        self.assertIn("headRegexFilter", dsl)
+        self.assertIn("main|master|prod|production", dsl)
+        self.assertIn("stage|staging", dsl)
+        self.assertIn("dev|develop|development", dsl)
+        self.assertIn("release/.+", dsl)
+        self.assertIn("bugfix/.+", dsl)
+        self.assertNotIn("feature/.+", dsl)
         self.assertNotIn("gitHubPullRequestDiscovery", dsl)
 
     def test_review_step_uses_branch_and_fixed_checkout_credential(self):
