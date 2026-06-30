@@ -39,7 +39,7 @@ projects.each { projectName, config ->
                         repository(config.repository)
                         traits {
                             gitHubBranchDiscovery {
-                                strategyId(1)
+                                strategyId(3)
                             }
                             headRegexFilter {
                                 regex(allowedBranchRegex)
