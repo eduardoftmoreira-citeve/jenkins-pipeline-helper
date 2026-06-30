@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Set
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set
 
 from .backup import ArchiveBackupManager
 from .config import PlatformConfig
@@ -29,6 +29,7 @@ class DeploymentContext:
     build_number: str
     network: str
     resources: Dict[str, Dict[str, Any]]
+    reporter: Callable[[str], None]
 
     def labels(self, category: str, component: str) -> Dict[str, str]:
         return {
@@ -38,6 +39,12 @@ class DeploymentContext:
             "io.cicd.category": category,
             "io.cicd.component": docker_safe_name(component),
         }
+
+    def log(self, message: str) -> None:
+        self.reporter(message)
+
+    def public_route_url(self, route: str) -> str:
+        return self.router.public_url(route)
 
 
 class ProviderRegistry:
@@ -53,12 +60,13 @@ class ProviderRegistry:
 
 
 class DeploymentEngine:
-    def __init__(self, platform: PlatformConfig, docker: DockerClient):
+    def __init__(self, platform: PlatformConfig, docker: DockerClient, reporter: Optional[Callable[[str], None]] = None):
         self.platform = platform
         self.docker = docker
         self.registry = ProviderRegistry()
         self.state = StateStore(platform.state_dir)
         self.router = NginxRouter(docker, platform.nginx)
+        self.reporter = reporter or (lambda message: None)
 
     def _network_name(self, project: ProjectSpec, environment: Environment) -> str:
         # Every environment has its own network. Shared non-prod Mongo joins active
@@ -83,6 +91,7 @@ class DeploymentEngine:
             build_number=str(build_number),
             network=self._network_name(project, environment),
             resources=resources,
+            reporter=self.reporter,
         )
 
     @staticmethod
@@ -112,8 +121,11 @@ class DeploymentEngine:
         )
         resources = dict(previous.get("resources", {}))
         context = self._context(project, environment, workspace, build_number, resources)
+        context.log(f"Preparing deployment for {project.name} on branch {environment.branch} -> environment {environment.name}")
+        context.log(f"Ensuring Docker network {context.network}")
         self.docker.ensure_network(context.network)
         if self.platform.nginx.enabled:
+            context.log(f"Connecting Nginx container {self.platform.nginx.container} to {context.network}")
             self.docker.connect_network(context.network, self.platform.nginx.container)
 
         state = previous
@@ -126,25 +138,33 @@ class DeploymentEngine:
             "shared_mongo": environment.shared_mongo,
         }
         for spec in project.infrastructure:
+            context.log(f"Deploying infrastructure {spec.name} ({spec.type})")
             provider = self.registry.get(spec.type)
             resource = provider.deploy(context, spec, resources.get(spec.name, {}))
             resources[spec.name] = resource
             state["resources"] = resources
             state["updated_at"] = datetime.now(timezone.utc).isoformat()
             self.state.save(project.name, environment.name, state)
+            context.log(f"Infrastructure {spec.name} ready: {resource.get('container', 'state saved')}")
 
         services = dict(previous.get("services", {}))
         for spec in project.services:
+            context.log(f"Deploying service {spec.name} ({spec.type})")
             provider = self.registry.get(spec.type)
             service = provider.deploy(context, spec, services.get(spec.name, {}))
             services[spec.name] = service
             state["services"] = services
             state["updated_at"] = datetime.now(timezone.utc).isoformat()
             self.state.save(project.name, environment.name, state)
+            context.log(f"Service {spec.name} ready: {service.get('container', 'state saved')}")
+            if service.get("route"):
+                context.log(f"App is live at: {context.public_route_url(service['route'])}")
 
         state["updated_at"] = datetime.now(timezone.utc).isoformat()
         self.state.save(project.name, environment.name, state)
+        context.log("Pruning dangling Docker images")
         self.docker.prune_dangling_images()
+        context.log(f"Deployment state saved for {project.name}/{environment.name}")
         return state
 
     @staticmethod

@@ -30,6 +30,7 @@ class RedisProvider(Provider):
         container = self._container_name(context, spec)
         volume = self._volume_name(container) if spec.data_volume else ""
         if context.docker.container_exists(container):
+            context.log(f"Redis container {container} already exists; validating image and running state")
             existing_image = context.docker.container_image(container)
             if existing_image and existing_image != image:
                 raise RuntimeError(
@@ -39,6 +40,7 @@ class RedisProvider(Provider):
             if not context.docker.running(container):
                 raise RuntimeError(f"Redis container exists but is not running: {container}")
         else:
+            context.log(f"Creating Redis container {container} from {image}")
             context.docker.run_container(
                 name=container,
                 image=image,
@@ -48,6 +50,7 @@ class RedisProvider(Provider):
                 volumes=[f"{volume}:/data"] if volume else [],
                 command=["redis-server", "--appendonly", "yes"],
             )
+        context.log(f"Waiting for Redis readiness in {container}")
         last_error = "Redis did not become ready"
         for _ in range(30):
             result = context.docker.exec(container, ["redis-cli", "--raw", "PING"], check=False)

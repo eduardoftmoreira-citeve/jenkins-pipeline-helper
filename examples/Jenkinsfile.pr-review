@@ -1,0 +1,20 @@
+@Library('jenkins-pipeline-helper') _
+
+pipeline {
+  agent any
+
+  stages {
+    stage('Ollama review') {
+      steps {
+        // In a normal branch build, this skips when the branch has no open PR.
+        reviewPullRequest()
+      }
+    }
+
+    stage('Deploy') {
+      steps {
+        deploy()
+      }
+    }
+  }
+}

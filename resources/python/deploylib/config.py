@@ -16,6 +16,7 @@ class NginxSettings:
     container: str = "nginx-proxy"
     locations_dir: Optional[str] = None
     route_prefix: str = "deploy"
+    public_url: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -211,6 +212,9 @@ def load_platform_config(path: Path) -> PlatformConfig:
     locations_dir = nginx_raw.get("locations_dir")
     if nginx_enabled and (not isinstance(locations_dir, str) or not locations_dir.strip()):
         raise ValueError("nginx.locations_dir is required when nginx.enabled is true")
+    public_url = nginx_raw.get("public_url")
+    if public_url is not None and (not isinstance(public_url, str) or not public_url.strip()):
+        raise ValueError("nginx.public_url must be a non-empty URL when set")
 
     backups = {
         provider_type: _provider_backup_settings(settings, provider_type)
@@ -234,6 +238,7 @@ def load_platform_config(path: Path) -> PlatformConfig:
             container=str(nginx_raw.get("container", "nginx-proxy")),
             locations_dir=locations_dir,
             route_prefix=str(nginx_raw.get("route_prefix", "deploy")).strip("/"),
+            public_url=public_url.rstrip("/") if isinstance(public_url, str) else None,
         ),
         backups=backups,
         review=review,

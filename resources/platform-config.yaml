@@ -12,6 +12,7 @@ nginx:
   # Existing locations directory from the legacy project.
   locations_dir: /home/users/cgomes/nginx/locations
   route_prefix: piloto-cicd
+  public_url: https://dev.citeve.pt
 
 # Backup policy is provider-owned. Add a future provider here only after that
 # provider implements the backup capability; Jenkins itself remains generic.

@@ -13,6 +13,31 @@ class EnvironmentTests(unittest.TestCase):
         self.assertTrue(resolve_environment("develop").shared_mongo)
         self.assertEqual(resolve_environment("staging").name, "staging")
 
+    def test_static_branch_aliases(self):
+        for branch in ("main", "master", "prod", "production", "refs/heads/master"):
+            with self.subTest(branch=branch):
+                environment = resolve_environment(branch)
+                self.assertEqual(environment.name, "prod")
+                self.assertEqual(environment.kind, "production")
+                self.assertFalse(environment.shared_mongo)
+                self.assertFalse(environment.ephemeral)
+
+        for branch in ("stage", "staging", "origin/stage"):
+            with self.subTest(branch=branch):
+                environment = resolve_environment(branch)
+                self.assertEqual(environment.name, "staging")
+                self.assertEqual(environment.kind, "staging")
+                self.assertTrue(environment.shared_mongo)
+                self.assertFalse(environment.ephemeral)
+
+        for branch in ("dev", "develop", "development", "refs/heads/development"):
+            with self.subTest(branch=branch):
+                environment = resolve_environment(branch)
+                self.assertEqual(environment.name, "dev")
+                self.assertEqual(environment.kind, "development")
+                self.assertTrue(environment.shared_mongo)
+                self.assertFalse(environment.ephemeral)
+
     def test_feature_branch_keeps_full_identity(self):
         environment = resolve_environment("feature/payments/api")
         self.assertEqual(environment.branch, "feature/payments/api")

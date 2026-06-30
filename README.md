@@ -72,17 +72,25 @@ maintenance(
 )
 ```
 
+Deployments print timestamped Python progress lines in Jenkins, for example:
+
+```text
+[deploy 14:08:31] Ensuring Docker network cicd-pps7-api-staging
+[deploy 14:08:36] Creating service container cicd-pps7-api-api-staging
+[deploy 14:08:41] App is live at: https://dev.citeve.pt/piloto-cicd/pps7-api/staging/api/
+```
+
 ## Branch environments
 
 | Branch | Environment | MongoDB | Redis/network |
 | --- | --- | --- | --- |
-| `main` | `prod` | Dedicated container/database | Dedicated Redis and network |
-| `develop` | `dev` | Shared non-prod Mongo container, environment database | Dedicated Redis and network |
-| `staging` | `staging` | Shared non-prod Mongo container, environment database | Dedicated Redis and network |
+| `main`, `master`, `prod`, `production` | `prod` | Dedicated container/database | Dedicated Redis and network |
+| `dev`, `develop`, `development` | `dev` | Shared non-prod Mongo container, environment database | Dedicated Redis and network |
+| `stage`, `staging` | `staging` | Shared non-prod Mongo container, environment database | Dedicated Redis and network |
 | `feature/*` | `feature-…-<hash>` | Shared non-prod Mongo container, environment database | Dedicated Redis and network |
 | `bugfix/*` | `bugfix-…-<hash>` | Shared non-prod Mongo container, environment database | Dedicated Redis and network |
 
-The static branch names are strict. `refs/heads/` and `origin/` prefixes are normalized before resolution.
+The static branch aliases resolve to one canonical environment name. `refs/heads/` and `origin/` prefixes are normalized before resolution.
 
 ## Application configuration
 
@@ -171,6 +179,12 @@ The active platform config uses the existing Nginx locations directory:
 
 ```text
 /home/users/cgomes/nginx/locations
+```
+
+It also uses `nginx.public_url` to print full application links in Jenkins:
+
+```text
+https://dev.citeve.pt
 ```
 
 These host paths must be writable and visible inside the Docker-capable Jenkins build agent:

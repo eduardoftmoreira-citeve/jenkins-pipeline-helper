@@ -64,6 +64,7 @@ class MongoProvider(Provider):
         container = self._container_name(context, spec)
         volume = self._volume_name(container) if spec.data_volume else ""
         if context.docker.container_exists(container):
+            context.log(f"Mongo container {container} already exists; validating image and running state")
             existing_image = context.docker.container_image(container)
             if existing_image and existing_image != image:
                 raise RuntimeError(
@@ -73,6 +74,7 @@ class MongoProvider(Provider):
             if not context.docker.running(container):
                 raise RuntimeError(f"Mongo container exists but is not running: {container}")
         else:
+            context.log(f"Creating Mongo container {container} from {image}")
             context.docker.run_container(
                 name=container,
                 image=image,
@@ -84,9 +86,12 @@ class MongoProvider(Provider):
 
         # Shared non-production Mongo joins each active environment network. Its
         # databases are isolated by name, while Redis is container-isolated.
+        context.log(f"Connecting Mongo container {container} to {context.network}")
         context.docker.connect_network(context.network, container)
+        context.log(f"Waiting for Mongo readiness in {container}")
         self._wait_for_mongo(context, container)
         database = self._database_name(context, spec)
+        context.log(f"Mongo database selected: {database}")
         return {
             "name": spec.name,
             "type": self.resource_type,

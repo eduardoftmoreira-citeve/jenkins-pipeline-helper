@@ -17,6 +17,11 @@ class NginxRouter:
     def route_path(self, project: str, environment: Environment, service: str) -> str:
         return f"/{self.settings.route_prefix}/{docker_safe_name(project)}/{environment.docker_name}/{docker_safe_name(service)}/"
 
+    def public_url(self, route: str) -> str:
+        if self.settings.public_url:
+            return f"{self.settings.public_url}{route}"
+        return route
+
     def _config_path(self, project: str, environment: Environment, service: str) -> Path:
         if not self.settings.locations_dir:
             raise RuntimeError("Nginx locations directory is not configured")

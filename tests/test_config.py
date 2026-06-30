@@ -59,6 +59,7 @@ class ConfigTests(unittest.TestCase):
         repository = Path(__file__).resolve().parents[1]
         platform = load_platform_config(repository / "resources" / "platform-config.yaml")
         self.assertEqual(platform.nginx.locations_dir, "/home/users/cgomes/nginx/locations")
+        self.assertEqual(platform.nginx.public_url, "https://dev.citeve.pt")
         self.assertTrue(platform.backup_settings_for("mongo").policies["production"].verify_restore)
 
     def test_infrastructure_auth_is_not_supported(self):

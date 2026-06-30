@@ -58,11 +58,14 @@ class NodeProvider(Provider):
             raise FileNotFoundError(f"Dockerfile not found: {dockerfile}")
         image = self._image_tag(context, spec)
         container = self._container_name(context, spec)
+        context.log(f"Building image {image} from {dockerfile}")
         context.docker.build_image(image, str(dockerfile), str(build_context), spec.build_args)
         environment = dict(spec.env)
         environment.update(self._dependency_environment(context, spec))
         if spec.inject_base_path:
             environment["BASE_PATH"] = context.router.route_path(context.project.name, context.environment, spec.name)
+            context.log(f"Injecting BASE_PATH={environment['BASE_PATH']} into service {spec.name}")
+        context.log(f"Creating service container {container}")
         context.docker.run_container(
             name=container,
             image=image,
@@ -71,9 +74,12 @@ class NodeProvider(Provider):
             environment=environment,
             volumes=spec.volumes,
         )
+        if spec.health_check:
+            context.log(f"Waiting for health check on {container}:{spec.port}{spec.health_check.path}")
         self._wait_for_health(context, spec, container)
         route = ""
         if spec.route_enabled:
+            context.log(f"Writing Nginx route for service {spec.name} -> {container}:{spec.port}")
             route = context.router.deploy(
                 project=context.project.name,
                 environment=context.environment,

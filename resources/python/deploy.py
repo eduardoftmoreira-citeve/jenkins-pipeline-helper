@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime
 import os
 from pathlib import Path
 import subprocess
@@ -16,6 +17,10 @@ from deploylib.engine import DeploymentEngine
 from deploylib.environment import normalize_branch, resolve_environment
 from deploylib.model import ProjectSpec
 from deploylib.review import review_open_pull_request
+
+
+def progress(message: str) -> None:
+    print(f"[deploy {datetime.now().strftime('%H:%M:%S')}] {message}", flush=True)
 
 
 def active_branches(repo_url: str) -> Set[str]:
@@ -93,7 +98,7 @@ def main() -> int:
 
         app_raw = load_application_config(workspace)
         project = ProjectSpec.from_dict(app_raw)
-        engine = DeploymentEngine(platform, DockerClient(CommandRunner(debug=args.debug)))
+        engine = DeploymentEngine(platform, DockerClient(CommandRunner(debug=args.debug)), reporter=progress)
 
         if args.command == "deploy":
             environment = resolve_environment(args.branch)
@@ -101,7 +106,7 @@ def main() -> int:
             print(f"Deployed {project.name} to {environment.name}")
             for service in state.get("services", {}).values():
                 if service.get("route"):
-                    print(f"Route: {service['route']}")
+                    print(f"App URL: {engine.router.public_url(service['route'])}")
             return 0
 
         if args.command == "cleanup":
