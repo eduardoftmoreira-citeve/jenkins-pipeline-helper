@@ -1,0 +1,22 @@
+@Library('jenkins-pipeline-helper') _
+
+pipeline {
+  agent any
+
+  stages {
+    stage('Ollama PR review') {
+      when { changeRequest() }
+      steps {
+        reviewPullRequest()
+        //reviewPullRequest(dryRun: true) for no PR comments
+      }
+    }
+
+    stage('Deploy branch environment') {
+      when { not { changeRequest() } }
+      steps {
+        deploy()
+      }
+    }
+  }
+}

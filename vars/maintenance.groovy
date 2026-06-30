@@ -11,7 +11,7 @@
  *   maintenance(
  *     operation: 'restore',
  *     branch: 'main',
- *     archive: '/home/emoreira/cicd-poc/backups/mongo/pps7-api/prod/mongo/20260630T021500Z.archive.gz',
+ *     archive: '/home/users/cicd/backups/mongo/pps7-api/prod/mongo/20260630T021500Z.archive.gz',
  *     confirmEnvironment: 'prod'
  *   )
  */
@@ -67,7 +67,7 @@ private List engineFiles() {
         'deploylib/__init__.py', 'deploylib/util.py', 'deploylib/environment.py',
         'deploylib/model.py', 'deploylib/config.py', 'deploylib/command.py',
         'deploylib/docker.py', 'deploylib/state.py', 'deploylib/router.py',
-        'deploylib/backup.py', 'deploylib/engine.py',
+        'deploylib/backup.py', 'deploylib/review.py', 'deploylib/engine.py',
         'deploylib/providers/__init__.py', 'deploylib/providers/base.py',
         'deploylib/providers/mongo.py', 'deploylib/providers/redis.py',
         'deploylib/providers/node.py'

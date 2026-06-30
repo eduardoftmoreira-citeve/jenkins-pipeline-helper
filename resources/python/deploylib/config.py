@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Mapping, Optional
 
@@ -41,6 +41,22 @@ class ProviderBackupSettings:
 
 
 @dataclass(frozen=True)
+class ReviewSettings:
+    """Platform-owned settings for the optional Ollama pull-request reviewer."""
+
+    enabled: bool = False
+    fail_on_error: bool = False
+    ollama_generate_url: str = ""
+    ollama_model: str = ""
+    ollama_timeout_seconds: int = 120
+    max_diff_characters: int = 120_000
+    max_files: int = 60
+    github_api_url: str = "https://api.github.com"
+    github_token_env: str = "GITHUB_TOKEN"
+    comment_marker: str = "<!-- cicd-ollama-review -->"
+
+
+@dataclass(frozen=True)
 class PlatformConfig:
     state_dir: Path
     network_prefix: str
@@ -48,6 +64,7 @@ class PlatformConfig:
     curl_image: str
     nginx: NginxSettings
     backups: Mapping[str, ProviderBackupSettings]
+    review: ReviewSettings = field(default_factory=ReviewSettings)
 
     def backup_settings_for(self, provider_type: str) -> Optional[ProviderBackupSettings]:
         return self.backups.get(provider_type)
@@ -102,6 +119,61 @@ def _backup_policy(raw: Any, provider_type: str, name: str) -> BackupPolicy:
     )
 
 
+def _strict_positive_int(value: Any, field: str) -> int:
+    parsed = _positive_int(value, field)
+    if parsed <= 0:
+        raise ValueError(f"{field} must be greater than zero")
+    return parsed
+
+
+def _review_settings(raw: Any) -> ReviewSettings:
+    if raw is None:
+        return ReviewSettings()
+    if not isinstance(raw, dict):
+        raise ValueError("platform review must be a mapping")
+
+    ollama_raw = raw.get("ollama", {}) or {}
+    github_raw = raw.get("github", {}) or {}
+    if not isinstance(ollama_raw, dict):
+        raise ValueError("platform review.ollama must be a mapping")
+    if not isinstance(github_raw, dict):
+        raise ValueError("platform review.github must be a mapping")
+
+    enabled = bool(raw.get("enabled", False))
+    generate_url = str(ollama_raw.get("generate_url", "")).strip()
+    model = str(ollama_raw.get("model", "")).strip()
+    if enabled and not generate_url:
+        raise ValueError("platform review.ollama.generate_url is required when review.enabled is true")
+    if enabled and not model:
+        raise ValueError("platform review.ollama.model is required when review.enabled is true")
+
+    token_env = str(github_raw.get("token_env", "GITHUB_TOKEN")).strip()
+    marker = str(github_raw.get("comment_marker", "<!-- cicd-ollama-review -->")).strip()
+    if enabled and not token_env:
+        raise ValueError("platform review.github.token_env cannot be empty when review.enabled is true")
+    if enabled and not marker:
+        raise ValueError("platform review.github.comment_marker cannot be empty when review.enabled is true")
+
+    return ReviewSettings(
+        enabled=enabled,
+        fail_on_error=bool(raw.get("fail_on_error", False)),
+        ollama_generate_url=generate_url,
+        ollama_model=model,
+        ollama_timeout_seconds=_strict_positive_int(
+            ollama_raw.get("timeout_seconds", 120),
+            "platform review.ollama.timeout_seconds",
+        ),
+        max_diff_characters=_strict_positive_int(
+            raw.get("max_diff_characters", 120_000),
+            "platform review.max_diff_characters",
+        ),
+        max_files=_strict_positive_int(raw.get("max_files", 60), "platform review.max_files"),
+        github_api_url=str(github_raw.get("api_url", "https://api.github.com")).rstrip("/"),
+        github_token_env=token_env,
+        comment_marker=marker,
+    )
+
+
 def _provider_backup_settings(raw: Any, provider_type: str) -> ProviderBackupSettings:
     if not isinstance(raw, dict):
         raise ValueError(f"backups.providers.{provider_type} must be a mapping")
@@ -144,6 +216,7 @@ def load_platform_config(path: Path) -> PlatformConfig:
         provider_type: _provider_backup_settings(settings, provider_type)
         for provider_type, settings in provider_backups_raw.items()
     }
+    review = _review_settings(raw.get("review"))
     for provider_type, settings in backups.items():
         production_policy = settings.policies.get("production", BackupPolicy())
         if production_policy.enabled and production_policy.daily_retention_days == 0:
@@ -163,4 +236,5 @@ def load_platform_config(path: Path) -> PlatformConfig:
             route_prefix=str(nginx_raw.get("route_prefix", "deploy")).strip("/"),
         ),
         backups=backups,
+        review=review,
     )

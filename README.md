@@ -8,6 +8,7 @@ A provider-based Jenkins shared library for deploying Dockerized applications to
 Application Jenkinsfile
   ├─ deploy()
   ├─ cleanupOrphans()
+  ├─ reviewPullRequest()
   └─ maintenance(operation: 'backup' | 'restore', ...)
         ↓
 Shared-library Groovy copies the Python engine and active platform config
@@ -23,7 +24,7 @@ The active platform configuration is committed at:
 resources/platform-config.yaml
 ```
 
-`deploy()`, `cleanupOrphans()` and `maintenance()` copy it into `.jenkins-deploy/platform-config.yaml` automatically. Application repositories do **not** need a platform config. An exceptional agent-visible override remains available through `platformConfig: '/path/to/file.yaml'`.
+`deploy()`, `cleanupOrphans()`, `reviewPullRequest()` and `maintenance()` copy it into `.jenkins-deploy/platform-config.yaml` automatically. Application repositories do **not** need a platform config. An exceptional agent-visible override remains available through `platformConfig: '/path/to/file.yaml'`.
 
 ## Groovy API
 
@@ -31,6 +32,7 @@ resources/platform-config.yaml
 | --- | --- |
 | `deploy()` | Build and deploy the current application's supported branch. |
 | `cleanupOrphans()` | Scheduled removal of feature/bugfix environments whose remote branches disappeared. |
+| `reviewPullRequest()` | Generate or update one Ollama-generated comment on the current same-repository pull request. |
 | `maintenance(operation: 'backup', branch: 'main')` | Run backup for every deployed resource whose provider supports it and has enabled policy. |
 | `maintenance(operation: 'restore', branch: 'main', archive: '...', confirmEnvironment: 'prod')` | Destructive provider-neutral restore of the resource recorded in the archive manifest. |
 
@@ -50,11 +52,22 @@ maintenance(operation: 'backup', branch: 'main')
 ```
 
 ```groovy
+// Pull-request pipeline stage. The Jenkins credential must be Secret Text and
+// contain a GitHub token with permission to write pull-request/issue comments.
+reviewPullRequest(githubTokenCredentialId: 'github-PAT')
+```
+
+```groovy
+// First-run diagnostic: generate the review but do not post to GitHub.
+reviewPullRequest(dryRun: true)
+```
+
+```groovy
 // Manual, destructive restore job. Never schedule this.
 maintenance(
   operation: 'restore',
   branch: 'main',
-  archive: '/home/emoreira/cicd-poc/backups/mongo/pps7-api/prod/mongo/20260630T021500Z.archive.gz',
+  archive: '/home/users/cicd/backups/mongo/pps7-api/prod/mongo/20260630T021500Z.archive.gz',
   confirmEnvironment: 'prod'
 )
 ```
@@ -107,6 +120,16 @@ services:
 
 The Node provider injects `MONGO_URI`, `MONGO_DB_NAME`, `REDIS_URL` and `REDIS_URI`. `BASE_PATH` is injected only when `route.inject_base_path: true`.
 
+## Pull-request review with Ollama
+
+`reviewPullRequest()` is separate from `deploy()`. It runs only in a Jenkins multibranch pull-request build with `CHANGE_ID` and `CHANGE_TARGET`, fetches the target branch using the existing `origin` remote, collects a bounded diff, sends that diff to the platform-configured Ollama `POST /api/generate` endpoint, and creates or updates one GitHub pull-request timeline comment. Repeated builds update the marked comment instead of adding a comment per build.
+
+The supplied `dsl/jobs.groovy` now uses **GitHub Branch Source** and discovers same-repository pull requests, which is what provides `CHANGE_ID` and `CHANGE_TARGET`. Re-run the seed job after applying this branch. It deliberately does not discover fork pull requests.
+
+The active platform config contains the Ollama endpoint, model, token environment-variable name, bounds and non-blocking policy. No token is committed. To publish a comment, bind a **Secret Text** credential in Jenkins, normally via `reviewPullRequest(githubTokenCredentialId: 'github-PAT')`. The token must be allowed to create and update pull-request timeline comments. `dryRun: true` calls Ollama but does not call GitHub.
+
+Fork pull requests are skipped by default because exposing a write-capable GitHub token to untrusted fork code is unsafe. `allowForks: true` exists only for a deliberately hardened Jenkins trust model. The committed `fail_on_error: false` policy means unreachable Ollama, a missing token, or a GitHub API error is reported as a skipped review rather than failing the PR pipeline. Change it to `true` once the service is proven reliable and you intentionally want reviews to be required.
+
 ## Providers and maintenance
 
 | Provider | Deploy responsibility | Maintenance capability today |
@@ -126,7 +149,7 @@ The committed `resources/platform-config.yaml` contains platform-level paths and
 backups:
   providers:
     mongo:
-      root_dir: /home/emoreira/cicd-poc/backups/mongo
+      root_dir: /home/users/cicd/backups/mongo
       policies:
         production: ...
         staging: ...
@@ -151,11 +174,12 @@ The active platform config uses the existing Nginx locations directory:
 These host paths must be writable and visible inside the Docker-capable Jenkins build agent:
 
 ```text
+/home/users/cicd
 /home/users/cgomes/nginx/locations
-/home/emoreira/cicd-poc/deployment-state
-/home/emoreira/cicd-poc/backups/mongo
 /var/run/docker.sock
 ```
+
+`/home/users/cicd` contains `deployment-state/` and `backups/`. It must be mounted into the actual Docker-capable Jenkins **agent**, not only the Jenkins controller.
 
 ## Orphan cleanup
 
@@ -167,7 +191,7 @@ These host paths must be writable and visible inside the Docker-capable Jenkins 
 PYTHONPATH=resources/python python3 -m unittest discover -s tests -v
 ```
 
-The tests are logic-only. They do not contact Docker, Jenkins, MongoDB, Redis or Nginx.
+The tests are logic-only. They do not contact Docker, Jenkins, MongoDB, Redis, Nginx, Ollama or GitHub.
 
 ## First migration
 

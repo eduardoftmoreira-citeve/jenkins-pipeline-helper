@@ -1,7 +1,7 @@
 # Active platform configuration for this Jenkins shared library.
 # The Groovy entrypoints copy this file into the job workspace automatically.
 # Paths below must be available inside the Docker-capable Jenkins build agent.
-state_dir: /home/emoreira/cicd-poc/deployment-state
+state_dir: /home/users/cicd/deployment-state
 network_prefix: cicd
 image_namespace: cicd
 curl_image: curlimages/curl:8.10.1
@@ -18,7 +18,8 @@ nginx:
 backups:
   providers:
     mongo:
-      root_dir: /home/emoreira/cicd-poc/backups/mongo
+      # Local-only storage on the physical Nexus server. This is not off-site DR.
+      root_dir: /home/users/emoreira/cicd-poc/backups/mongo
       policies:
         production:
           enabled: true
@@ -38,3 +39,24 @@ backups:
 # MongoDB and Redis are intentionally unauthenticated in this startup-phase
 # deployment model. They are not published on host ports; network isolation is
 # provided by per-environment Docker networks.
+
+# Pull-request review is intentionally independent from deployment. The endpoint
+# is the local Ollama server used by the previous helper implementation. Reviews
+# are skipped, rather than failing a PR build, if Ollama or GitHub is unavailable.
+review:
+  enabled: true
+  fail_on_error: false
+  # Ollama's POST /api/generate endpoint; no application repository may override this.
+  ollama:
+    generate_url: http://192.168.54.202:11434/api/generate
+    model: qwen2.5-coder:7b
+    timeout_seconds: 120
+  # Bound the prompt so one unusually large PR cannot swamp the local model.
+  max_diff_characters: 120000
+  max_files: 60
+  github:
+    api_url: https://api.github.com
+    # reviewPullRequest(githubTokenCredentialId: '...') binds this secret variable.
+    token_env: GITHUB_TOKEN
+    # One marker means repeated builds update one comment instead of spamming a PR.
+    comment_marker: '<!-- cicd-ollama-review -->'

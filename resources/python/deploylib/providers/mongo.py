@@ -170,6 +170,7 @@ class MongoProvider(Provider):
             context.docker.exec(container, ["rm", "-f", archive_name], check=False)
 
     def destroy(self, context: Any, state: Dict[str, Any]) -> None:
+        # Orphan cleanup removes this environment's database, never shared Mongo itself.
         container = state.get("container")
         database = state.get("database")
         if not container or not database or not context.docker.container_exists(container):

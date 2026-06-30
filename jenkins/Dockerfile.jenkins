@@ -20,6 +20,7 @@ RUN jenkins-plugin-cli --plugins \
     job-dsl \
     workflow-aggregator \
     pipeline-utility-steps \
+    credentials-binding \
     docker-plugin \
     github-branch-source \
     blueocean
