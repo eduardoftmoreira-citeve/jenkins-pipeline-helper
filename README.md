@@ -33,10 +33,11 @@ resources/platform-config.yaml
 | `deploy()` | Build and deploy the current application's supported branch. |
 | `cleanupOrphans()` | Scheduled removal of feature/bugfix environments whose remote branches disappeared. |
 | `reviewPullRequest()` | Generate or update one Ollama-generated comment on the current same-repository pull request. |
+| `maintenance(operation: 'verify', branch: 'main')` | Verify deployed service containers and restart a stopped or unhealthy service once. |
 | `maintenance(operation: 'backup', branch: 'main')` | Run backup for every deployed resource whose provider supports it and has enabled policy. |
 | `maintenance(operation: 'restore', branch: 'main', archive: '...', confirmEnvironment: 'prod')` | Destructive provider-neutral restore of the resource recorded in the archive manifest. |
 
-Jenkins has no Mongo-specific entrypoints. It only asks the engine to perform a maintenance operation. The engine reads deployment state, selects the provider recorded for each resource, and invokes only providers that advertise the requested capability.
+Jenkins has no Mongo-specific entrypoints. It only asks the engine to perform a maintenance operation. The engine reads deployment state, selects the provider recorded for each resource, and invokes only providers that advertise the requested capability. Verification is intentionally conservative: it restarts once, then fails if health is still bad.
 
 Examples:
 
@@ -60,6 +61,67 @@ reviewPullRequest()
 ```groovy
 // First-run diagnostic: generate the review but do not post to GitHub.
 reviewPullRequest(dryRun: true)
+```
+
+For multistage application Jenkinsfiles, prefer one top-level Docker-capable
+agent instead of `agent none` plus a separate `agent` block per stage. Jenkins
+does a default SCM checkout for each newly allocated stage agent, so per-stage
+agents clone the application repository repeatedly.
+
+```groovy
+@Library('jenkins-pipeline-helper') _
+
+def maintenanceCron = env.BRANCH_NAME in ['main', 'master', 'prod', 'production'] ? 'H H(1-4) * * *' : ''
+
+pipeline {
+  agent {
+    label 'python-agent'
+  }
+
+  options {
+    disableConcurrentBuilds()
+  }
+
+  triggers {
+    cron(maintenanceCron)
+  }
+
+  stages {
+    stage('Deploy') {
+      when {
+        not { triggeredBy 'TimerTrigger' }
+      }
+      steps {
+        deploy()
+      }
+    }
+
+    stage('Ollama review') {
+      when {
+        not { triggeredBy 'TimerTrigger' }
+      }
+      steps {
+        reviewPullRequest()
+      }
+    }
+
+    stage('Nightly maintenance') {
+      when {
+        allOf {
+          expression { env.BRANCH_NAME in ['main', 'master', 'prod', 'production'] }
+          triggeredBy 'TimerTrigger'
+        }
+      }
+      steps {
+        maintenance(operation: 'verify', branch: env.BRANCH_NAME)
+        maintenance(operation: 'verify', branch: 'staging')
+        maintenance(operation: 'backup', branch: env.BRANCH_NAME)
+        maintenance(operation: 'backup', branch: 'staging')
+        cleanupOrphans()
+      }
+    }
+  }
+}
 ```
 
 ```groovy

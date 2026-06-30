@@ -17,10 +17,13 @@ from deploylib.model import HealthCheck, InfrastructureSpec, ProjectSpec, Servic
 
 
 class FakeDocker:
-    def __init__(self) -> None:
+    def __init__(self, *, existing=None, running=None, health_statuses=None) -> None:
         self.calls = []
         self.runs = []
         self.builds = []
+        self.existing = set(existing or [])
+        self.running_map = dict(running or {})
+        self.health_statuses = list(health_statuses or [])
 
     def ensure_network(self, name):
         self.calls.append(("ensure_network", name))
@@ -30,7 +33,7 @@ class FakeDocker:
 
     def container_exists(self, name):
         self.calls.append(("container_exists", name))
-        return False
+        return name in self.existing
 
     def run_container(self, **kwargs):
         self.calls.append(("run_container", kwargs["name"]))
@@ -48,7 +51,17 @@ class FakeDocker:
 
     def http_status(self, network, image, url):
         self.calls.append(("http_status", network, image, url))
+        if self.health_statuses:
+            return self.health_statuses.pop(0)
         return 200
+
+    def running(self, name):
+        self.calls.append(("running", name))
+        return self.running_map.get(name, True)
+
+    def restart_container(self, name):
+        self.calls.append(("restart_container", name))
+        self.running_map[name] = True
 
     def prune_dangling_images(self):
         self.calls.append(("prune_dangling_images",))
@@ -105,6 +118,103 @@ class EngineMockedDeployTests(unittest.TestCase):
             self.assertIn(("build_image", "cicd/pps7-api-api:staging-43"), docker.calls)
             self.assertIn(("prune_dangling_images",), docker.calls)
             self.assertTrue(any("App is live at: https://dev.citeve.pt/piloto-cicd/pps7-api/staging/api/" in item for item in logs))
+
+    def test_verify_restarts_stopped_service_and_checks_health(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            container = "cicd-pps7-api-api-staging"
+            platform = PlatformConfig(
+                state_dir=root / "state",
+                network_prefix="cicd",
+                image_namespace="cicd",
+                curl_image="curlimages/curl",
+                nginx=NginxSettings(),
+                backups={},
+            )
+            docker = FakeDocker(existing={container}, running={container: False}, health_statuses=[200])
+            engine = DeploymentEngine(platform, docker)
+            project = ProjectSpec(
+                "pps7-api",
+                [],
+                [ServiceSpec("api", "node", 3000, health_check=HealthCheck(path="/health"))],
+            )
+            state = engine._state_document(project, resolve_environment("staging"), "cicd-pps7-api-staging")
+            state["services"] = {
+                "api": {
+                    "name": "api",
+                    "type": "node",
+                    "container": container,
+                    "route": "/piloto-cicd/pps7-api/staging/api/",
+                }
+            }
+            engine.state.save(project.name, "staging", state)
+
+            results = engine.maintain(project, resolve_environment("staging"), operation="verify")
+
+            self.assertEqual(results[0]["status"], "healthy")
+            self.assertTrue(results[0]["restarted"])
+            self.assertIn(("restart_container", container), docker.calls)
+            self.assertIn(
+                ("http_status", "cicd-pps7-api-staging", "curlimages/curl", f"http://{container}:3000/health"),
+                docker.calls,
+            )
+
+    def test_verify_restarts_once_when_health_fails_then_recovers(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            container = "cicd-pps7-api-api-staging"
+            platform = PlatformConfig(
+                state_dir=root / "state",
+                network_prefix="cicd",
+                image_namespace="cicd",
+                curl_image="curlimages/curl",
+                nginx=NginxSettings(),
+                backups={},
+            )
+            docker = FakeDocker(existing={container}, running={container: True}, health_statuses=[500, 200])
+            engine = DeploymentEngine(platform, docker)
+            project = ProjectSpec(
+                "pps7-api",
+                [],
+                [ServiceSpec("api", "node", 3000, health_check=HealthCheck(path="/health"))],
+            )
+            state = engine._state_document(project, resolve_environment("staging"), "cicd-pps7-api-staging")
+            state["services"] = {"api": {"name": "api", "type": "node", "container": container}}
+            engine.state.save(project.name, "staging", state)
+
+            results = engine.maintain(project, resolve_environment("staging"), operation="verify")
+
+            self.assertEqual(results[0]["status"], "healthy")
+            self.assertTrue(results[0]["restarted"])
+            self.assertEqual(docker.calls.count(("restart_container", container)), 1)
+
+    def test_verify_fails_when_health_stays_bad_after_restart(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            container = "cicd-pps7-api-api-staging"
+            platform = PlatformConfig(
+                state_dir=root / "state",
+                network_prefix="cicd",
+                image_namespace="cicd",
+                curl_image="curlimages/curl",
+                nginx=NginxSettings(),
+                backups={},
+            )
+            docker = FakeDocker(existing={container}, running={container: True}, health_statuses=[500, 500])
+            engine = DeploymentEngine(platform, docker)
+            project = ProjectSpec(
+                "pps7-api",
+                [],
+                [ServiceSpec("api", "node", 3000, health_check=HealthCheck(path="/health"))],
+            )
+            state = engine._state_document(project, resolve_environment("staging"), "cicd-pps7-api-staging")
+            state["services"] = {"api": {"name": "api", "type": "node", "container": container}}
+            engine.state.save(project.name, "staging", state)
+
+            with self.assertRaisesRegex(RuntimeError, "Service verification failed"):
+                engine.maintain(project, resolve_environment("staging"), operation="verify")
+
+            self.assertEqual(docker.calls.count(("restart_container", container)), 1)
 
 
 if __name__ == "__main__":

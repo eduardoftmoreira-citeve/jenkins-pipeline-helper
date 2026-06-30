@@ -29,6 +29,12 @@ class MaintenanceContractTests(unittest.TestCase):
         settings = ProviderBackupSettings(Path("/tmp/backups"), {"production": BackupPolicy(enabled=True)})
         self.assertTrue(settings.policies["production"].enabled)
 
+    def test_groovy_entrypoint_accepts_verify_operation(self):
+        repository = Path(__file__).resolve().parents[1]
+        groovy = (repository / "vars" / "maintenance.groovy").read_text(encoding="utf-8")
+        self.assertIn("'verify'", groovy)
+        self.assertIn("--operation", groovy)
+
 
 if __name__ == "__main__":
     unittest.main()

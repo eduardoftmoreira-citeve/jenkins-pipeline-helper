@@ -3,7 +3,7 @@
 /**
  * Run a provider-neutral maintenance operation for the application in this job.
  *
- * Supported operations today: backup and restore. Providers decide whether they
+ * Supported operations today: backup, restore and verify. Providers decide whether they
  * support an operation; Jenkins never names a specific infrastructure type.
  *
  * Examples:
@@ -17,8 +17,8 @@
  */
 def call(Map options = [:]) {
     def operation = options.get('operation', '').toString().trim()
-    if (!(operation in ['backup', 'restore'])) {
-        error("maintenance requires operation: 'backup' or 'restore'.")
+    if (!(operation in ['backup', 'restore', 'verify'])) {
+        error("maintenance requires operation: 'backup', 'restore' or 'verify'.")
     }
 
     def branch = options.get('branch', env.BRANCH_NAME ?: '').toString().trim()

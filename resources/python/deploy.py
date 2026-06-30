@@ -88,7 +88,7 @@ def parser() -> argparse.ArgumentParser:
     cleanup.add_argument("--repo-url", required=True)
 
     maintenance = commands.add_parser("maintenance", help="Run a provider-neutral maintenance operation")
-    maintenance.add_argument("--operation", choices=("backup", "restore"), required=True)
+    maintenance.add_argument("--operation", choices=("backup", "restore", "verify"), required=True)
     maintenance.add_argument("--branch", required=True, help="Environment branch, such as main or staging")
     maintenance.add_argument("--workspace", required=True)
     maintenance.add_argument("--platform-config", required=True)
@@ -154,6 +154,17 @@ def main() -> int:
             for result in results:
                 verification = "verified" if result["verified_restore"] else "checksum-only"
                 print(f"Backup [{result['provider']}/{result['resource']}, {verification}]: {result['archive']}")
+        elif args.operation == "verify":
+            print(f"Service verification for {project.name}/{environment.name}:")
+            for result in results:
+                restart = "restarted" if result["restarted"] else "no restart"
+                health = ""
+                if result["expected_status"] is not None:
+                    health = f", HTTP {result['health_status']} expected {result['expected_status']}"
+                print(
+                    f"Verify [{result['service']}]: {result['status']} ({restart}{health}) "
+                    f"container={result['container']}"
+                )
         else:
             for result in results:
                 print(f"Restored [{result['provider']}/{result['resource']}]: {result['archive']}")

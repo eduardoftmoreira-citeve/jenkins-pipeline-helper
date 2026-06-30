@@ -212,6 +212,8 @@ class DeploymentEngine:
         confirmation: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """Dispatch a provider-neutral maintenance operation for one environment."""
+        if operation == "verify":
+            return self._verify_services(project, environment)
         if operation == "backup":
             return self._backup_resources(project, environment)
         if operation == "restore":
@@ -221,6 +223,102 @@ class DeploymentEngine:
                 raise RuntimeError(f"Restore confirmation must exactly equal '{environment.name}'")
             return [self._restore_resource(project, environment, archive)]
         raise ValueError(f"Unsupported maintenance operation: {operation}")
+
+    def _verify_services(self, project: ProjectSpec, environment: Environment) -> List[Dict[str, Any]]:
+        with self.state.project_lock(project.name):
+            state = self.state.load(project.name, environment.name)
+            if not state:
+                raise RuntimeError(f"No deployment state exists for {project.name}/{environment.name}")
+            services = dict(state.get("services", {}))
+            if not services:
+                raise RuntimeError(f"No deployed services exist for {project.name}/{environment.name}")
+
+            spec_by_name = {spec.name: spec for spec in project.services}
+            network = state.get("network") or self._network_name(project, environment)
+            results: List[Dict[str, Any]] = []
+            failures: List[str] = []
+
+            for name, service_state in services.items():
+                container = service_state.get("container")
+                spec = spec_by_name.get(name)
+                if not container:
+                    failures.append(f"{name}: state has no container name")
+                    continue
+                if not spec:
+                    failures.append(f"{name}: service is absent from current application config")
+                    continue
+
+                self.reporter(f"Verifying service {name}: {container}")
+                if not self.docker.container_exists(container):
+                    failures.append(f"{name}: container is missing ({container})")
+                    continue
+
+                restarted = False
+                if not self.docker.running(container):
+                    self.reporter(f"Service {name} is stopped; restarting {container}")
+                    self.docker.restart_container(container)
+                    restarted = True
+                    if not self.docker.running(container):
+                        failures.append(f"{name}: container is still stopped after restart ({container})")
+                        results.append(
+                            {
+                                "service": name,
+                                "container": container,
+                                "status": "stopped",
+                                "restarted": restarted,
+                                "health_status": None,
+                                "expected_status": None,
+                                "route": service_state.get("route", ""),
+                            }
+                        )
+                        continue
+
+                health_status = None
+                expected_status = None
+                if spec.health_check:
+                    expected_status = spec.health_check.status_code
+                    url = f"http://{container}:{spec.port}{spec.health_check.path}"
+                    health_status = self.docker.http_status(network, self.platform.curl_image, url)
+                    if health_status != expected_status and not restarted:
+                        self.reporter(
+                            f"Service {name} health returned {health_status}; restarting {container} once"
+                        )
+                        self.docker.restart_container(container)
+                        restarted = True
+                        health_status = self.docker.http_status(network, self.platform.curl_image, url)
+                    if health_status != expected_status:
+                        failures.append(
+                            f"{name}: expected HTTP {expected_status}, got {health_status} after restart"
+                        )
+                        results.append(
+                            {
+                                "service": name,
+                                "container": container,
+                                "status": "unhealthy",
+                                "restarted": restarted,
+                                "health_status": health_status,
+                                "expected_status": expected_status,
+                                "route": service_state.get("route", ""),
+                            }
+                        )
+                        continue
+
+                results.append(
+                    {
+                        "service": name,
+                        "container": container,
+                        "status": "healthy" if spec.health_check else "running",
+                        "restarted": restarted,
+                        "health_status": health_status,
+                        "expected_status": expected_status,
+                        "route": service_state.get("route", ""),
+                    }
+                )
+
+            if failures:
+                details = "; ".join(failures)
+                raise RuntimeError(f"Service verification failed for {project.name}/{environment.name}: {details}")
+            return results
 
     def _backup_resources(self, project: ProjectSpec, environment: Environment) -> List[Dict[str, Any]]:
         with self.state.project_lock(project.name):

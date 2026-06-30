@@ -37,6 +37,9 @@ class DockerClient:
     def remove_container(self, name: str) -> None:
         self.runner.run(["docker", "rm", "-f", name], check=False)
 
+    def restart_container(self, name: str) -> None:
+        self.runner.run(["docker", "restart", name])
+
     def remove_volume(self, name: str) -> None:
         self.runner.run(["docker", "volume", "rm", name], check=False)
 

@@ -1,7 +1,9 @@
 @Library('jenkins-pipeline-helper') _
 
 pipeline {
-  agent any
+  agent {
+    label 'python-agent'
+  }
 
   stages {
     stage('Ollama review') {
