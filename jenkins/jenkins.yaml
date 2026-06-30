@@ -1,0 +1,373 @@
+configuration-as-code: {
+  }
+credentials:
+  folder: {
+    }
+  providerImpl: {
+    }
+  system:
+    domainCredentials:
+    - credentials:
+      - usernamePassword:
+          id: "github-PAT"
+          password: "{AQAAABAAAAAw9m6+Vy6l/Xn8UmlRBi2f+5VUO+C9xjEqI5+DNcpL08VTZdImHMu0fFWWss/pIMlkhq/LM8fk+nXFQTciKaLd1g==}"
+          scope: GLOBAL
+          username: "eduardoftmoreira-citeve"
+      - usernamePassword:
+          id: "notifier-email"
+          password: "{AQAAABAAAAAgGUeaBNF+q74XWiqudZzJ33/zM3gjVNAM3BJxI4MDguF1eoCDyg7x+TRRIfUlzkNO}"
+          scope: GLOBAL
+          username: "emoreira@citeve.pt"
+      domain: {
+        }
+  user: {
+    }
+jenkins:
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+  clouds:
+  - docker:
+      dockerApi:
+        connectTimeout: 60
+        dockerHost:
+          uri: "unix:///var/run/docker.sock"
+        readTimeout: 60
+      name: "docker-agents"
+      templates:
+      - connector: "attach"
+        dockerTemplateBase:
+          cpuPeriod: 0
+          cpuQuota: 0
+          image: "localhost:5000/python-agent:latest"
+          mounts:
+          - "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock"
+          - "type=bind,source=/usr/bin/docker,target=/usr/bin/docker,readonly=true"
+          - "type=bind,source=/home/users/cgomes/nginx/locations,target=/home/users/cgomes/nginx/locations"
+          - "type=bind,source=/home/users/emoreira/cicd-poc,target=/home/users/emoreira/cicd-poc"
+          mountsString: |-
+            type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock
+            type=bind,source=/usr/bin/docker,target=/usr/bin/docker,readonly=true
+            type=bind,source=/home/users/cgomes/nginx/locations,target=/home/users/cgomes/nginx/locations
+            type=bind,source=/home/users/emoreira/cicd-poc,target=/home/users/emoreira/cicd-poc
+          privileged: true
+          user: "root"
+        instanceCapStr: "1"
+        labelString: "python-agent"
+        name: "python-agent"
+        pullStrategy: PULL_NEVER
+        pullTimeout: 300
+        remoteFs: "/home/jenkins"
+        removeVolumes: true
+  crumbIssuer: "standard"
+  disableRememberMe: false
+  disabledAdministrativeMonitors:
+  - "hudson.util.DoubleLaunchChecker"
+  labelAtoms:
+  - name: "built-in"
+  - name: "python-agent"
+  - name: "python-agent-000eumm0eeba7"
+  log: {
+    }
+  markupFormatter: "plainText"
+  mode: NORMAL
+  nodeMonitors:
+  - "architecture"
+  - "clock"
+  - diskSpace:
+      freeSpaceThreshold: "1GiB"
+      freeSpaceWarningThreshold: "2GiB"
+  - "swapSpace"
+  - tmpSpace:
+      freeSpaceThreshold: "1GiB"
+      freeSpaceWarningThreshold: "2GiB"
+  - "responseTime"
+  numExecutors: 2
+  primaryView:
+    all:
+      name: "all"
+  projectNamingStrategy: "standard"
+  quietPeriod: 5
+  remotingSecurity:
+    enabled: true
+  scmCheckoutRetryCount: 0
+  securityRealm:
+    local:
+      allowsSignup: false
+      enableCaptcha: false
+      users:
+      - id: "jenkins"
+        name: "Jenkins Proof Of Concept"
+        properties:
+        - theme:
+            theme: "noOp"
+        - "consoleUrlProvider"
+        - "viewsTabBar"
+        - myView:
+            viewsTabBar: "standard"
+        - preferredProvider:
+            providerId: "default"
+        - "timezone"
+        - "experimentalFlags"
+        - mailer:
+            emailAddress: "emoreira@citeve.pt"
+        - userLocale:
+            localeCode: "en"
+        - "apiToken"
+        - "favorite"
+  slaveAgentPort: 50000
+  updateCenter:
+    sites:
+    - id: "default"
+      url: "https://updates.jenkins.io/update-center.json"
+  views:
+  - list:
+      columns:
+      - "status"
+      - "weather"
+      - "jobName"
+      - "lastSuccess"
+      - "lastFailure"
+      - "lastDuration"
+      - "buildButton"
+      description: "All project pipelines"
+      includeRegex: ".*"
+      name: "Deployments"
+  - all:
+      name: "all"
+  viewsTabBar: "standard"
+globalCredentialsConfiguration:
+  configuration:
+    providerFilter: "none"
+    typeFilter: "none"
+appearance:
+  consoleUrlProvider: {
+    }
+  locale:
+    allowUserPreferences: false
+    ignoreAcceptLanguage: true
+    systemLocale: "USE_BROWSER_LOCALE"
+  pipelineGraphView:
+    showGraphOnBuildPage: false
+    showGraphOnJobPage: false
+    showStageDurations: false
+    showStageNames: false
+  prism:
+    theme: PRISM
+  themeManager:
+    disableUserThemes: false
+    theme: "dark"
+security:
+  apiToken:
+    creationOfLegacyTokenEnabled: false
+    tokenGenerationOnCreationEnabled: false
+    usageStatisticsEnabled: true
+  apiTokenProperty: {
+    }
+  contentSecurityPolicy:
+    enforce: false
+  cps:
+    hideSandbox: false
+  crumb: {
+    }
+  gitHooks:
+    allowedOnAgents: false
+    allowedOnController: false
+  gitHostKeyVerificationConfiguration:
+    sshHostKeyVerificationStrategy: "knownHostsFileVerificationStrategy"
+  globalJobDslSecurityConfiguration:
+    useScriptSecurity: true
+  prism:
+    protectSourceCodeByPermission: false
+  queueItemAuthenticator: {
+    }
+  scriptApproval:
+    approvedScriptHashes:
+    - "SHA512:37e6b6c283b1c00b9428ba8b6baecba38333e4e6f43f47243433c216237b1c25a92f5c96d3abcfc93095514bd6ac6ec93dd63b0a2679361df6967f7e18354f0f"
+    - "SHA512:5d5eae577063e79e312e617f51bcd8ff6d4bd8a08603049e00375dfa9fd8231d3f91025f90aa788222f06b1274155417eb1d0817f57cca1dbf9490e14c8662d4"
+    forceSandbox: false
+  updateSiteWarningsConfiguration: {
+    }
+unclassified:
+  administrativeMonitorsConfiguration: {
+    }
+  artifactManager: {
+    }
+  bitbucketEndpointConfiguration:
+    endpoints:
+    - bitbucketCloudEndpoint:
+        enableCache: false
+        repositoriesCacheDuration: 0
+        teamCacheDuration: 0
+        webhook:
+          cloudWebhook:
+            enableHookSignature: false
+            manageHooks: false
+            webhooksCacheDuration: 180
+  buildDiscarders:
+    configuredBuildDiscarders:
+    - "jobBuildDiscarder"
+  buildStepOperation:
+    enabled: false
+  casCGlobalConfig: {
+    }
+  computerRetentionCheckInterval: {
+    }
+  defaultDisplayUrlProvider: {
+    }
+  defaultFolderConfiguration: {
+    }
+  defaultView: {
+    }
+  email-ext:
+    adminRequiredForTemplateTesting: false
+    allowUnregisteredEnabled: false
+    charset: "UTF-8"
+    debugMode: true
+    defaultAttachBuildLog: 0
+    defaultBody: |-
+      $PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS:
+
+      Check console output at $BUILD_URL to view the results.
+    defaultContentType: "text/plain"
+    defaultSubject: "$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!"
+    defaultSuffix: "@citeve.pt"
+    defaultTriggerIds:
+    - "hudson.plugins.emailext.plugins.trigger.FailureTrigger"
+    mailAccount:
+      credentialsId: "notifier-email"
+      smtpHost: "smtp.office365.com"
+      smtpPort: "587"
+      useTls: true
+    maxAttachmentSize: -1
+    maxAttachmentSizeMb: -1
+    precedenceBulk: false
+    throttlingEnabled: false
+    watchingEnabled: false
+  enrichedSummaryConfig:
+    enrichedSummaryEnabled: false
+    globalBuildScanDetection: false
+    httpClientDelayBetweenRetriesInSeconds: 1
+    httpClientMaxRetries: 3
+    httpClientTimeoutInSeconds: 1
+  envVarsFilter: {
+    }
+  fingerprints:
+    fingerprintCleanupDisabled: false
+    storage: "file"
+  gitHubConfiguration:
+    apiRateLimitChecker: ThrottleForNormalize
+  gitHubPluginConfig:
+    hookUrl: "http://dev.citeve.pt/jenkins/github-webhook/"
+  globalDefaultFlowDurabilityLevel: {
+    }
+  globalLibraries:
+    libraries:
+    - defaultVersion: "main"
+      name: "jenkins-pipeline-helper"
+      retriever:
+        modernSCM:
+          libraryPath: "."
+          scm:
+            gitSource:
+              credentialsId: "github-PAT"
+              remote: "https://github.com/eduardoftmoreira-citeve/jenkins-pipeline-helper.git"
+              traits:
+              - "gitBranchDiscovery"
+    - retriever:
+        modernSCM:
+          scm:
+            gitSource:
+              traits:
+              - "gitBranchDiscovery"
+  globalTimeOutConfiguration:
+    operations:
+    - "abortOperation"
+    overwriteable: false
+  globalUntrustedLibraries: {
+    }
+  injectionConfig:
+    allowUntrusted: false
+    checkForBuildAgentErrors: false
+    enabled: false
+    enforceUrl: false
+    gradleCaptureTaskInputFiles: true
+    injectCcudExtension: false
+    injectMavenExtension: false
+    mavenCaptureGoalInputFiles: true
+  junitTestResultStorage:
+    storage: "file"
+  location:
+    adminAddress: "emoreira@citeve.pt"
+    url: "http://dev.citeve.pt/jenkins/"
+  mailer:
+    charset: "UTF-8"
+    useSsl: false
+    useTls: false
+  metricsAccessKey: {
+    }
+  myView: {
+    }
+  nodeProperties: {
+    }
+  plugin: {
+    }
+  pollSCM:
+    pollingThreadCount: 10
+  projectNamingStrategy: {
+    }
+  prometheusConfiguration:
+    appendParamLabel: false
+    appendStatusLabel: false
+    collectCodeCoverage: false
+    collectDiskUsage: true
+    collectNodeStatus: true
+    collectingMetricsPeriodInSeconds: 120
+    countAbortedBuilds: true
+    countFailedBuilds: true
+    countNotBuiltBuilds: true
+    countSuccessfulBuilds: true
+    countUnstableBuilds: true
+    defaultNamespace: "default"
+    fetchTestResults: true
+    jobAttributeName: "jenkins_job"
+    path: "prometheus"
+    perBuildMetrics: false
+    perBuildMetricsMaxAgeInHours: 0
+    perBuildMetricsMaxBuilds: 0
+    processingDisabledBuilds: false
+    useAuthenticatedEndpoint: false
+  proxyConfigurationManager: {
+    }
+  quietPeriod: {
+    }
+  resourceRoot: {
+    }
+  scmGit:
+    addGitTagAction: false
+    allowSecondFetch: false
+    createAccountBasedOnEmail: false
+    disableGitToolChooser: false
+    hideCredentials: false
+    showEntireCommitSummaryInChanges: false
+    useExistingAccountWithSameEmail: false
+  scmRetryCount: {
+    }
+  shell: {
+    }
+  timestamper:
+    allPipelines: false
+    elapsedTimeFormat: "'<b>'HH:mm:ss.S'</b> '"
+    systemTimeFormat: "'<b>'HH:mm:ss'</b> '"
+  usageStatistics: {
+    }
+  viewsTabBar: {
+    }
+tool:
+  git:
+    installations:
+    - home: "git"
+      name: "Default"
+  mavenGlobalConfig:
+    globalSettingsProvider: "standard"
+    settingsProvider: "standard"
