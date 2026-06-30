@@ -1,0 +1,392 @@
+Branch indexing
+Connecting to https://api.github.com using eduardoftmoreira-citeve/******
+Obtained Jenkinsfile from 6e15d6c108279c078d9857dcfff47e634ae47e2c
+Loading library jenkins-pipeline-helper@main
+Attempting to resolve main from remote references...
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+using GIT_ASKPASS to set credentials 
+ > git ls-remote -h -- https://github.com/eduardoftmoreira-citeve/jenkins-pipeline-helper.git # timeout=10
+Found match: refs/heads/main revision f65589e55a98a86f27e3a08964b1afa90324b410
+Selected Git installation does not exist. Using Default
+The recommended git tool is: NONE
+using credential github-PAT
+ > git rev-parse --resolve-git-dir /var/jenkins_home/workspace/pps7_master@libs/26ef3dd8336be81be5584885d177293b944bcc3cd2bb089428430c7dbbbf593e/.git # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/eduardoftmoreira-citeve/jenkins-pipeline-helper.git # timeout=10
+Fetching without tags
+Fetching upstream changes from https://github.com/eduardoftmoreira-citeve/jenkins-pipeline-helper.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+using GIT_ASKPASS to set credentials 
+ > git fetch --no-tags --force --progress -- https://github.com/eduardoftmoreira-citeve/jenkins-pipeline-helper.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+Checking out Revision f65589e55a98a86f27e3a08964b1afa90324b410 (main)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f f65589e55a98a86f27e3a08964b1afa90324b410 # timeout=10
+Commit message: "implementing container rescue"
+ > git rev-list --no-walk f65589e55a98a86f27e3a08964b1afa90324b410 # timeout=10
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on python-agent-000g98q2p2hgj on docker-agents in /home/jenkins/workspace/pps7_master
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Declarative: Checkout SCM)
+[Pipeline] checkout
+Selected Git installation does not exist. Using Default
+The recommended git tool is: NONE
+using credential github-PAT
+Cloning the remote Git repository
+Cloning with configured refspecs honoured and without tags
+Cloning repository https://github.com/DEV-DTD-CITEVE/TEXPACT-WP2-PPS7.git
+ > git init /home/jenkins/workspace/pps7_master # timeout=10
+Fetching upstream changes from https://github.com/DEV-DTD-CITEVE/TEXPACT-WP2-PPS7.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+using GIT_ASKPASS to set credentials 
+ > git fetch --no-tags --force --progress -- https://github.com/DEV-DTD-CITEVE/TEXPACT-WP2-PPS7.git +refs/heads/master:refs/remotes/origin/master # timeout=10
+Avoid second fetch
+Checking out Revision 6e15d6c108279c078d9857dcfff47e634ae47e2c (master)
+ > git config remote.origin.url https://github.com/DEV-DTD-CITEVE/TEXPACT-WP2-PPS7.git # timeout=10
+ > git config --add remote.origin.fetch +refs/heads/master:refs/remotes/origin/master # timeout=10
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 6e15d6c108279c078d9857dcfff47e634ae47e2c # timeout=10
+Commit message: "jenkinsfile restructure"
+ > git rev-list --no-walk 0d4d3730418fdbb7680df12a400b4e36505e8ea6 # timeout=10
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Deploy)
+[Pipeline] echo
+Deployment started
+[Pipeline] sh
++ rm -rf /home/jenkins/workspace/pps7_master/.jenkins-deploy
++ mkdir -p /home/jenkins/workspace/pps7_master/.jenkins-deploy/deploylib/providers
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] sh
++ set -eu
++ [ 0 = 1 ]
++ set --
++ python3 /home/jenkins/workspace/pps7_master/.jenkins-deploy/deploy.py deploy --branch master --build-number 3 --workspace /home/jenkins/workspace/pps7_master --platform-config /home/jenkins/workspace/pps7_master/.jenkins-deploy/platform-config.yaml
+[deploy 16:06:59] Preparing deployment for pps7-api on branch master -> environment prod
+[deploy 16:06:59] Ensuring Docker network cicd-pps7-api-prod
+[deploy 16:06:59] Connecting Nginx container nginx-proxy to cicd-pps7-api-prod
+[deploy 16:06:59] Deploying infrastructure mongo (mongo)
+[deploy 16:06:59] Mongo container cicd-pps7-api-mongo-prod already exists; validating image and running state
+[deploy 16:06:59] Connecting Mongo container cicd-pps7-api-mongo-prod to cicd-pps7-api-prod
+[deploy 16:06:59] Waiting for Mongo readiness in cicd-pps7-api-mongo-prod
+[deploy 16:07:00] Mongo database selected: pps7_api_mongo_prod
+[deploy 16:07:00] Infrastructure mongo ready: cicd-pps7-api-mongo-prod
+[deploy 16:07:00] Deploying infrastructure redis (redis)
+[deploy 16:07:00] Redis container cicd-pps7-api-redis-prod already exists; validating image and running state
+[deploy 16:07:00] Waiting for Redis readiness in cicd-pps7-api-redis-prod
+[deploy 16:07:01] Infrastructure redis ready: cicd-pps7-api-redis-prod
+[deploy 16:07:01] Deploying service api (node)
+[deploy 16:07:01] Building image cicd/pps7-api-api:prod-3 from /home/jenkins/workspace/pps7_master/Dockerfile
+[deploy 16:07:10] Injecting BASE_PATH=/piloto-cicd/pps7-api/prod/api/ into service api
+[deploy 16:07:10] Creating service container cicd-pps7-api-api-prod
+[deploy 16:07:15] Waiting for health check on cicd-pps7-api-api-prod:3000/health
+[deploy 16:07:31] Writing Nginx route for service api -> cicd-pps7-api-api-prod:3000
+[deploy 16:07:31] Service api ready: cicd-pps7-api-api-prod
+[deploy 16:07:31] App is live at: https://dev.citeve.pt/piloto-cicd/pps7-api/prod/api/
+[deploy 16:07:31] Pruning dangling Docker images
+[deploy 16:07:31] Deployment state saved for pps7-api/prod
+
+=== Deployment summary ===
+Project: pps7-api
+Branch: master
+Environment: prod (production)
+Network: cicd-pps7-api-prod
+Infrastructure:
+  - mongo (mongo): cicd-pps7-api-mongo-prod [mongo:8]
+  - redis (redis): cicd-pps7-api-redis-prod [redis:7]
+Services:
+  - api (node): cicd-pps7-api-api-prod [cicd/pps7-api-api:prod-3]
+    App live at: https://dev.citeve.pt/piloto-cicd/pps7-api/prod/api/
+==========================
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] echo
+Deployment completed
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Ollama review)
+[Pipeline] sh
++ rm -rf /home/jenkins/workspace/pps7_master/.jenkins-deploy
++ mkdir -p /home/jenkins/workspace/pps7_master/.jenkins-deploy/deploylib/providers
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] withCredentials
+Masking supported pattern matches of $GITHUB_TOKEN
+[Pipeline] {
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] sh
++ set -eu
++ set -- review --workspace /home/jenkins/workspace/pps7_master --platform-config /home/jenkins/workspace/pps7_master/.jenkins-deploy/platform-config.yaml --repo-url https://github.com/DEV-DTD-CITEVE/TEXPACT-WP2-PPS7.git --branch master
++ [ 0 = 1 ]
++ python3 /home/jenkins/workspace/pps7_master/.jenkins-deploy/deploy.py review --workspace /home/jenkins/workspace/pps7_master --platform-config /home/jenkins/workspace/pps7_master/.jenkins-deploy/platform-config.yaml --repo-url https://github.com/DEV-DTD-CITEVE/TEXPACT-WP2-PPS7.git --branch master
+No open same-repository pull request found for branch 'master'.
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // withCredentials
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Nightly maintenance)
+[Pipeline] sh
++ rm -rf /home/jenkins/workspace/pps7_master/.jenkins-deploy
++ mkdir -p /home/jenkins/workspace/pps7_master/.jenkins-deploy/deploylib/providers
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] sh
++ set -eu
++ set -- maintenance --operation backup --branch master --workspace /home/jenkins/workspace/pps7_master --platform-config /home/jenkins/workspace/pps7_master/.jenkins-deploy/platform-config.yaml
++ [ backup = restore ]
++ python3 /home/jenkins/workspace/pps7_master/.jenkins-deploy/deploy.py maintenance --operation backup --branch master --workspace /home/jenkins/workspace/pps7_master --platform-config /home/jenkins/workspace/pps7_master/.jenkins-deploy/platform-config.yaml
+Backup [mongo/mongo, verified]: /home/emoreira/cicd-poc/backups/mongo/pps7-api/prod/mongo/20260630T160755Z.archive.gz
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] sh
++ rm -rf /home/jenkins/workspace/pps7_master/.jenkins-deploy
++ mkdir -p /home/jenkins/workspace/pps7_master/.jenkins-deploy/deploylib/providers
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] sh
++ set -eu
++ set -- maintenance --operation backup --branch staging --workspace /home/jenkins/workspace/pps7_master --platform-config /home/jenkins/workspace/pps7_master/.jenkins-deploy/platform-config.yaml
++ [ backup = restore ]
++ python3 /home/jenkins/workspace/pps7_master/.jenkins-deploy/deploy.py maintenance --operation backup --branch staging --workspace /home/jenkins/workspace/pps7_master --platform-config /home/jenkins/workspace/pps7_master/.jenkins-deploy/platform-config.yaml
+Backup [mongo/mongo, checksum-only]: /home/emoreira/cicd-poc/backups/mongo/pps7-api/staging/mongo/20260630T160821Z.archive.gz
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] sh
++ rm -rf /home/jenkins/workspace/pps7_master/.jenkins-deploy
++ mkdir -p /home/jenkins/workspace/pps7_master/.jenkins-deploy/deploylib/providers
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] withCredentials
+Masking supported pattern matches of $GITHUB_TOKEN
+[Pipeline] {
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] sh
++ set -eu
++ python3 /home/jenkins/workspace/pps7_master/.jenkins-deploy/deploy.py cleanup --workspace /home/jenkins/workspace/pps7_master --platform-config /home/jenkins/workspace/pps7_master/.jenkins-deploy/platform-config.yaml --repo-url https://github.com/DEV-DTD-CITEVE/TEXPACT-WP2-PPS7.git
+Removed 1 orphaned ephemeral environment(s) for pps7-api
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // withCredentials
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+Agent python-agent-000g98q2p2hgj was deleted, but do not have a node body to cancel
+[Pipeline] // node
+[Pipeline] End of Pipeline
+
+GitHub has been notified of this commit’s build result
+
+Finished: SUCCESS

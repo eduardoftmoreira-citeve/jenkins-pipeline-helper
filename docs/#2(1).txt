@@ -1,0 +1,282 @@
+Started by user Jenkins Proof Of Concept
+Connecting to https://api.github.com using eduardoftmoreira-citeve/******
+Obtained Jenkinsfile from fe5b6d504f495b7e2c809643f0ec05374deee512
+Loading library jenkins-pipeline-helper@main
+Attempting to resolve main from remote references...
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+using GIT_ASKPASS to set credentials 
+ > git ls-remote -h -- https://github.com/eduardoftmoreira-citeve/jenkins-pipeline-helper.git # timeout=10
+Found match: refs/heads/main revision 064d9ca41e6f1e31bd0e4e4eba0f14c369f692a8
+Selected Git installation does not exist. Using Default
+The recommended git tool is: NONE
+using credential github-PAT
+ > git rev-parse --resolve-git-dir /var/jenkins_home/workspace/pps7_feature_foo@libs/26ef3dd8336be81be5584885d177293b944bcc3cd2bb089428430c7dbbbf593e/.git # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/eduardoftmoreira-citeve/jenkins-pipeline-helper.git # timeout=10
+Fetching without tags
+Fetching upstream changes from https://github.com/eduardoftmoreira-citeve/jenkins-pipeline-helper.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+using GIT_ASKPASS to set credentials 
+ > git fetch --no-tags --force --progress -- https://github.com/eduardoftmoreira-citeve/jenkins-pipeline-helper.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+Checking out Revision 064d9ca41e6f1e31bd0e4e4eba0f14c369f692a8 (main)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 064d9ca41e6f1e31bd0e4e4eba0f14c369f692a8 # timeout=10
+Commit message: "fix broken pr review git commands"
+ > git rev-list --no-walk 50d54f58a75ed52ab648f071daa893bb5cc24fbb # timeout=10
+[Pipeline] Start of Pipeline
+[Pipeline] stage
+[Pipeline] { (Deploy)
+[Pipeline] node
+Running on python-agent-000g8ebprx9fg on docker-agents in /home/jenkins/workspace/pps7_feature_foo
+[Pipeline] {
+[Pipeline] checkout
+Selected Git installation does not exist. Using Default
+The recommended git tool is: NONE
+using credential github-PAT
+Cloning the remote Git repository
+Cloning with configured refspecs honoured and without tags
+Cloning repository https://github.com/DEV-DTD-CITEVE/TEXPACT-WP2-PPS7.git
+ > git init /home/jenkins/workspace/pps7_feature_foo # timeout=10
+Fetching upstream changes from https://github.com/DEV-DTD-CITEVE/TEXPACT-WP2-PPS7.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+using GIT_ASKPASS to set credentials 
+ > git fetch --no-tags --force --progress -- https://github.com/DEV-DTD-CITEVE/TEXPACT-WP2-PPS7.git +refs/heads/feature/foo:refs/remotes/origin/feature/foo # timeout=10
+Avoid second fetch
+Checking out Revision fe5b6d504f495b7e2c809643f0ec05374deee512 (feature/foo)
+Commit message: "test commit to trigger pipeline"
+ > git config remote.origin.url https://github.com/DEV-DTD-CITEVE/TEXPACT-WP2-PPS7.git # timeout=10
+ > git config --add remote.origin.fetch +refs/heads/feature/foo:refs/remotes/origin/feature/foo # timeout=10
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f fe5b6d504f495b7e2c809643f0ec05374deee512 # timeout=10
+ > git rev-list --no-walk fe5b6d504f495b7e2c809643f0ec05374deee512 # timeout=10
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] echo
+Deployment started
+[Pipeline] sh
++ rm -rf /home/jenkins/workspace/pps7_feature_foo/.jenkins-deploy
++ mkdir -p /home/jenkins/workspace/pps7_feature_foo/.jenkins-deploy/deploylib/providers
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] sh
++ set -eu
++ [ 0 = 1 ]
++ set --
++ python3 /home/jenkins/workspace/pps7_feature_foo/.jenkins-deploy/deploy.py deploy --branch feature/foo --build-number 2 --workspace /home/jenkins/workspace/pps7_feature_foo --platform-config /home/jenkins/workspace/pps7_feature_foo/.jenkins-deploy/platform-config.yaml
+[deploy 15:27:12] Preparing deployment for pps7-api on branch feature/foo -> environment feature-foo-87171a
+[deploy 15:27:12] Ensuring Docker network cicd-pps7-api-feature-foo-87171a
+[deploy 15:27:12] Connecting Nginx container nginx-proxy to cicd-pps7-api-feature-foo-87171a
+[deploy 15:27:12] Deploying infrastructure mongo (mongo)
+[deploy 15:27:13] Mongo container cicd-pps7-api-mongo-shared already exists; validating image and running state
+[deploy 15:27:13] Connecting Mongo container cicd-pps7-api-mongo-shared to cicd-pps7-api-feature-foo-87171a
+[deploy 15:27:13] Waiting for Mongo readiness in cicd-pps7-api-mongo-shared
+[deploy 15:27:13] Mongo database selected: pps7_api_mongo_feature_foo_87171a
+[deploy 15:27:13] Infrastructure mongo ready: cicd-pps7-api-mongo-shared
+[deploy 15:27:13] Deploying infrastructure redis (redis)
+[deploy 15:27:13] Redis container cicd-pps7-api-redis-feature-foo-87171a already exists; validating image and running state
+[deploy 15:27:13] Waiting for Redis readiness in cicd-pps7-api-redis-feature-foo-87171a
+[deploy 15:27:14] Infrastructure redis ready: cicd-pps7-api-redis-feature-foo-87171a
+[deploy 15:27:14] Deploying service api (node)
+[deploy 15:27:14] Building image cicd/pps7-api-api:feature-foo-87171a-2 from /home/jenkins/workspace/pps7_feature_foo/Dockerfile
+[deploy 15:27:23] Injecting BASE_PATH=/piloto-cicd/pps7-api/feature-foo-87171a/api/ into service api
+[deploy 15:27:23] Creating service container cicd-pps7-api-api-feature-foo-87171a
+[deploy 15:27:28] Waiting for health check on cicd-pps7-api-api-feature-foo-87171a:3000/health
+[deploy 15:27:38] Writing Nginx route for service api -> cicd-pps7-api-api-feature-foo-87171a:3000
+[deploy 15:27:38] Service api ready: cicd-pps7-api-api-feature-foo-87171a
+[deploy 15:27:38] App is live at: https://dev.citeve.pt/piloto-cicd/pps7-api/feature-foo-87171a/api/
+[deploy 15:27:38] Pruning dangling Docker images
+[deploy 15:27:38] Deployment state saved for pps7-api/feature-foo-87171a
+
+=== Deployment summary ===
+Project: pps7-api
+Branch: feature/foo
+Environment: feature-foo-87171a (feature)
+Network: cicd-pps7-api-feature-foo-87171a
+Infrastructure:
+  - mongo (mongo): cicd-pps7-api-mongo-shared [mongo:8]
+  - redis (redis): cicd-pps7-api-redis-feature-foo-87171a [redis:7]
+Services:
+  - api (node): cicd-pps7-api-api-feature-foo-87171a [cicd/pps7-api-api:feature-foo-87171a-2]
+    App live at: https://dev.citeve.pt/piloto-cicd/pps7-api/feature-foo-87171a/api/
+==========================
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] echo
+Deployment completed
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+Agent python-agent-000g8ebprx9fg was deleted, but do not have a node body to cancel
+[Pipeline] // node
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Ollama review)
+[Pipeline] node
+Running on python-agent-000g8eyadxqxc on docker-agents in /home/jenkins/workspace/pps7_feature_foo
+[Pipeline] {
+[Pipeline] checkout
+Selected Git installation does not exist. Using Default
+The recommended git tool is: NONE
+using credential github-PAT
+Cloning the remote Git repository
+Cloning with configured refspecs honoured and without tags
+Cloning repository https://github.com/DEV-DTD-CITEVE/TEXPACT-WP2-PPS7.git
+ > git init /home/jenkins/workspace/pps7_feature_foo # timeout=10
+Fetching upstream changes from https://github.com/DEV-DTD-CITEVE/TEXPACT-WP2-PPS7.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+using GIT_ASKPASS to set credentials 
+ > git fetch --no-tags --force --progress -- https://github.com/DEV-DTD-CITEVE/TEXPACT-WP2-PPS7.git +refs/heads/feature/foo:refs/remotes/origin/feature/foo # timeout=10
+Avoid second fetch
+Checking out Revision fe5b6d504f495b7e2c809643f0ec05374deee512 (feature/foo)
+ > git config remote.origin.url https://github.com/DEV-DTD-CITEVE/TEXPACT-WP2-PPS7.git # timeout=10
+ > git config --add remote.origin.fetch +refs/heads/feature/foo:refs/remotes/origin/feature/foo # timeout=10
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f fe5b6d504f495b7e2c809643f0ec05374deee512 # timeout=10
+Commit message: "test commit to trigger pipeline"
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] sh
++ rm -rf /home/jenkins/workspace/pps7_feature_foo/.jenkins-deploy
++ mkdir -p /home/jenkins/workspace/pps7_feature_foo/.jenkins-deploy/deploylib/providers
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] libraryResource
+[Pipeline] writeFile
+[Pipeline] withCredentials
+Masking supported pattern matches of $GITHUB_TOKEN
+[Pipeline] {
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] sh
++ set -eu
++ set -- review --workspace /home/jenkins/workspace/pps7_feature_foo --platform-config /home/jenkins/workspace/pps7_feature_foo/.jenkins-deploy/platform-config.yaml --repo-url https://github.com/DEV-DTD-CITEVE/TEXPACT-WP2-PPS7.git --branch feature/foo
++ [ 0 = 1 ]
++ python3 /home/jenkins/workspace/pps7_feature_foo/.jenkins-deploy/deploy.py review --workspace /home/jenkins/workspace/pps7_feature_foo --platform-config /home/jenkins/workspace/pps7_feature_foo/.jenkins-deploy/platform-config.yaml --repo-url https://github.com/DEV-DTD-CITEVE/TEXPACT-WP2-PPS7.git --branch feature/foo
+Created the automated review comment on pull request #4.
+
+--- Ollama review ---
+# Review Summary
+
+The pull request introduces a new file `test_commit` but does not provide any content. Without the actual changes, it is impossible to assess correctness, security, reliability, backward compatibility, or test coverage.
+
+# Findings
+
+**Severity: Low**
+
+- **File/Location:** `test_commit`
+  - **Issue:** The file is empty and does not contain any test code.
+  - **Remediation:** Add actual test cases to ensure the functionality being committed works as expected.
+
+# Test Coverage
+
+**Coverage:** None provided
+
+- **Issue:** There are no test cases in the new file, which means there is no coverage for the changes.
+- **Remediation:** Write unit tests that cover all aspects of the code being introduced. Ensure tests follow best practices and are well-documented.
+
+## Conclusion
+
+The pull request introduces an empty file without any test code. While not critical for functionality alone, it is essential to have proper testing in place to maintain the quality and reliability of the project. Please ensure the new file contains meaningful test cases before merging.
+GitHub comment: https://github.com/DEV-DTD-CITEVE/TEXPACT-WP2-PPS7/pull/4#issuecomment-4845235670
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // withCredentials
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Nightly maintenance)
+Stage "Nightly maintenance" skipped due to when conditional
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] End of Pipeline
+
+GitHub has been notified of this commit’s build result
+
+Finished: SUCCESS

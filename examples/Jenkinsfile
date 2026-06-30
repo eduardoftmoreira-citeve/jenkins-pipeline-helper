@@ -1,0 +1,79 @@
+@Library('jenkins-pipeline-helper') _
+
+def maintenanceCron = env.BRANCH_NAME == 'master' ? '''
+H/10 * * * *
+H H(1-4) * * *
+''' : ''
+
+pipeline {
+    agent {
+        label 'python-agent'
+    }
+
+    options {
+        disableConcurrentBuilds()
+    }
+
+    triggers {
+        cron(maintenanceCron)
+    }
+
+    stages {
+        stage('Deploy') {
+            when {
+                not {
+                    triggeredBy 'TimerTrigger'
+                }
+            }
+
+            steps {
+                deploy()
+            }
+        }
+
+        stage('Ollama review') {
+            when {
+                not {
+                    triggeredBy 'TimerTrigger'
+                }
+            }
+
+            steps {
+                reviewPullRequest()
+            }
+        }
+
+        stage('Routine health check') {
+            when {
+                allOf {
+                    branch 'master'
+                    //triggeredBy 'TimerTrigger'
+                }
+            }
+
+            steps {
+                maintenance(operation: 'verify', branch: 'master')
+                maintenance(operation: 'verify', branch: 'staging')
+            }
+        }
+
+        stage('Nightly maintenance') {
+            when {
+                allOf {
+                    branch 'master'
+                    triggeredBy 'TimerTrigger'
+                    expression {
+                        def hour = new Date().format('H', TimeZone.getTimeZone('Europe/Lisbon')) as int
+                        return hour >= 1 && hour <= 4
+                    }
+                }
+            }
+
+            steps {
+                maintenance(operation: 'backup', branch: 'master')
+                maintenance(operation: 'backup', branch: 'staging')
+                cleanupOrphans()
+            }
+        }
+    }
+}
