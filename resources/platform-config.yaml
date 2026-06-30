@@ -1,0 +1,40 @@
+# Active platform configuration for this Jenkins shared library.
+# The Groovy entrypoints copy this file into the job workspace automatically.
+# Paths below must be available inside the Docker-capable Jenkins build agent.
+state_dir: /home/emoreira/cicd-poc/deployment-state
+network_prefix: cicd
+image_namespace: cicd
+curl_image: curlimages/curl:8.10.1
+
+nginx:
+  enabled: true
+  container: nginx-proxy
+  # Existing locations directory from the legacy project.
+  locations_dir: /home/users/cgomes/nginx/locations
+  route_prefix: piloto-cicd
+
+# Backup policy is provider-owned. Add a future provider here only after that
+# provider implements the backup capability; Jenkins itself remains generic.
+backups:
+  providers:
+    mongo:
+      root_dir: /home/emoreira/cicd-poc/backups/mongo
+      policies:
+        production:
+          enabled: true
+          daily_retention_days: 14
+          weekly_retention_weeks: 8
+          monthly_retention_months: 12
+          # Each archive is restored into a disposable Mongo container before it
+          # is accepted. This is slower, but proves the archive can be restored.
+          verify_restore: true
+        staging:
+          enabled: true
+          daily_retention_days: 7
+          weekly_retention_weeks: 2
+          monthly_retention_months: 0
+          verify_restore: false
+
+# MongoDB and Redis are intentionally unauthenticated in this startup-phase
+# deployment model. They are not published on host ports; network isolation is
+# provided by per-environment Docker networks.

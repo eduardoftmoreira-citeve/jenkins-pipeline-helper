@@ -1,2 +1,4 @@
 pyproject.json
 .vscode
+__pycache__/
+*.py[cod]

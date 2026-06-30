@@ -13,7 +13,8 @@ services:
       - jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
       - /home/users/cgomes/nginx/locations:/home/users/cgomes/nginx/locations
-      - /home/emoreira/cicd-poc/backups:/home/emoreira/cicd-poc/backups/ 
+      - /home/emoreira/cicd-poc/backups:/home/emoreira/cicd-poc/backups
+      - /home/emoreira/cicd-poc/deployment-state:/home/emoreira/cicd-poc/deployment-state
     environment:
       - JAVA_OPTS=-Djenkins.install.runSetupWizard=true
       - JENKINS_OPTS="--prefix=/jenkins" #added for nginx configuration
