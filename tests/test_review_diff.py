@@ -1,9 +1,15 @@
 from pathlib import Path
+import os
 import subprocess
+import sys
 import tempfile
+import types
 import unittest
+from unittest.mock import patch
 
-from deploylib.review import collect_pull_request_diff
+sys.modules.setdefault("yaml", types.SimpleNamespace(safe_load=lambda handle: {}))
+
+from deploylib.review import _run_git, collect_pull_request_diff
 
 
 def git(args, *, cwd=None):
@@ -38,6 +44,26 @@ class ReviewDiffTests(unittest.TestCase):
             self.assertEqual(snapshot.omitted_files, 1)
             self.assertIn("diff --git", snapshot.text)
             self.assertFalse(snapshot.truncated)
+
+    def test_authenticated_git_uses_askpass_environment(self):
+        captured = {}
+
+        def fake_run(args, **kwargs):
+            captured["args"] = args
+            captured["env"] = kwargs.get("env")
+            return type("Result", (), {"returncode": 0, "stdout": "ok\n", "stderr": ""})()
+
+        with tempfile.TemporaryDirectory() as temp, \
+             patch.dict(os.environ, {"GITHUB_TOKEN": "secret-token", "GITHUB_USERNAME": "x-access-token"}, clear=False), \
+             patch("subprocess.run", side_effect=fake_run):
+            output = _run_git(Path(temp), ["fetch", "--no-tags", "origin", "refs/heads/main"], authenticated=True)
+
+        self.assertEqual(output, "ok\n")
+        self.assertEqual(captured["args"][:2], ["git", "fetch"])
+        self.assertEqual(captured["env"]["GIT_TERMINAL_PROMPT"], "0")
+        self.assertEqual(captured["env"]["GIT_USERNAME"], "x-access-token")
+        self.assertEqual(captured["env"]["GIT_PASSWORD"], "secret-token")
+        self.assertIn("GIT_ASKPASS", captured["env"])
 
 
 if __name__ == "__main__":

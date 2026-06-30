@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from contextlib import nullcontext
 import json
 import os
 from pathlib import Path
 import re
 import subprocess
+import tempfile
 from typing import Any, Dict, Optional, Sequence, Tuple
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlencode
@@ -72,6 +74,54 @@ def _run_git(workspace: Path, arguments: Sequence[str]) -> str:
     return result.stdout
 
 
+def _askpass_script(directory: Path) -> Path:
+    if os.name == "nt":
+        script = directory / "git-askpass.bat"
+        script.write_text("@echo off\r\necho %GIT_PASSWORD%\r\n", encoding="utf-8")
+        return script
+
+    script = directory / "git-askpass.sh"
+    script.write_text(
+        "#!/bin/sh\n"
+        "case \"$1\" in\n"
+        "*Username*) printf '%s\\n' \"${GIT_USERNAME:-x-access-token}\" ;;\n"
+        "*) printf '%s\\n' \"${GIT_PASSWORD:-}\" ;;\n"
+        "esac\n",
+        encoding="utf-8",
+    )
+    script.chmod(0o700)
+    return script
+
+
+def _run_git(workspace: Path, arguments: Sequence[str], *, authenticated: bool = False) -> str:
+    environment = None
+    token = os.environ.get("GITHUB_TOKEN", "")
+    context = tempfile.TemporaryDirectory() if authenticated and token else nullcontext("")
+    with context as askpass_dir:
+        if askpass_dir:
+            environment = os.environ.copy()
+            environment.update(
+                {
+                    "GIT_ASKPASS": str(_askpass_script(Path(askpass_dir))),
+                    "GIT_TERMINAL_PROMPT": "0",
+                    "GIT_USERNAME": os.environ.get("GITHUB_USERNAME", "x-access-token"),
+                    "GIT_PASSWORD": token,
+                }
+            )
+        result = subprocess.run(
+            ["git", *arguments],
+            cwd=workspace,
+            text=True,
+            capture_output=True,
+            check=False,
+            env=environment,
+        )
+    if result.returncode != 0:
+        detail = result.stderr.strip() or result.stdout.strip() or "no output"
+        raise ReviewError(f"Git command failed (git {arguments[0]} ...): {detail}")
+    return result.stdout
+
+
 def _normalise_branch(value: str, *, label: str) -> str:
     branch = (value or "").strip()
     for prefix in ("refs/heads/", "origin/"):
@@ -106,7 +156,7 @@ def collect_pull_request_diff(
 
     # Use Jenkins' configured origin remote. This preserves SCM credential handling
     # and avoids ever placing a GitHub token in a process argument or command log.
-    _run_git(workspace, ["fetch", "--no-tags", "origin", f"refs/heads/{branch}"])
+    _run_git(workspace, ["fetch", "--no-tags", "origin", f"refs/heads/{branch}"], authenticated=True)
     base_commit = _run_git(workspace, ["rev-parse", "FETCH_HEAD"]).strip()
     head_commit = _run_git(workspace, ["rev-parse", "HEAD"]).strip()
     comparison = f"{base_commit}...{head_commit}"
