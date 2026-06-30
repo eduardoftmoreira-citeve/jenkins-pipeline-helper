@@ -1,7 +1,7 @@
 # Active platform configuration for this Jenkins shared library.
 # The Groovy entrypoints copy this file into the job workspace automatically.
 # Paths below must be available inside the Docker-capable Jenkins build agent.
-state_dir: /home/users/cicd/deployment-state
+state_dir: /home/emoreira/cicd-poc/deployment-state
 network_prefix: cicd
 image_namespace: cicd
 curl_image: curlimages/curl:8.10.1
@@ -19,7 +19,7 @@ backups:
   providers:
     mongo:
       # Local-only storage on the physical Nexus server. This is not off-site DR.
-      root_dir: /home/users/cicd/backups/mongo
+      root_dir: /home/emoreira/cicd-poc/backups/mongo
       policies:
         production:
           enabled: true
